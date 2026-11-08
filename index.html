@@ -1,4 +1,4 @@
-<style>
+<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Web Node V2 — INPS</title><style>/* Stile del pannello — identico al tuo Web_Node.html */
 .vwrap{padding:0;}
 .vpanel{background:#1b1a19;overflow:hidden;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;line-height:1.2;transition:opacity .3s ease;}
 .vbar{display:flex;align-items:center;gap:10px;padding:11px 15px;}
@@ -28,8 +28,9 @@
 .nlbl{font-size:11.5px;fill:#bdbcb8;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;pointer-events:none;transition:fill .3s ease;}
 .nlbl.bright{fill:#ffffff;}
 .nlbl.off{fill:#76766f;}
-</style>
-<div class="vwrap">
+
+[hidden]{display:none!important}
+</style><style>body{margin:0;background:#1b1a19}.vwrap{width:100%;max-width:1200px;margin:auto}.vsearch input{min-width:0;width:100%}</style><div class="vwrap">
   <div class="vpanel" id="vpanel">
     <div class="vbar">
       <span class="vaddr">www.inps.it</span>
@@ -47,18 +48,15 @@
   </div>
 </div>
 <script>
+/* Web Node — motore di visualizzazione (ricavato dal tuo Web_Node.html).
+   Logica di layout/animazione: la tua, invariata. Modifiche minime:
+   - l'albero arriva da cfg.tree (costruito dal sitemap del sito), non piu' cablato;
+   - niente document.write per la vista affiancata (vietato dalla CSP MV3):
+     il pulsante quadrato chiama cfg.onOpenSplit();
+   - boot NON viene auto-invocato: e' esposto come window.WebNode.boot. */
 (function(){
-  // Tutta la logica vive dentro boot(cfg), invece che sparsa nell'IIFE come prima,
-  // perché il pulsante "quadrato" adesso deve aprire una seconda copia della mappa
-  // dentro una finestra separata (vedi openSplitView più sotto). Per non tenere due
-  // versioni del motore da mantenere allineate a mano, quella seconda copia viene
-  // generata al volo con boot.toString() e rieseguita nel documento della nuova
-  // finestra con misure diverse (più stretta e più alta). cfg porta solo i numeri
-  // che cambiano fra le due versioni: il resto del codice è identico in entrambe.
-  // Tutto quello che serve (compreso NS, che prima stava fuori dall'IIFE) deve
-  // vivere dentro boot: è il testo di boot stesso ad essere rispedito nella
-  // finestra nuova, quindi non può appoggiarsi a niente di esterno.
-  function boot(cfg){
+  "use strict";
+function boot(cfg){
     var NS="http://www.w3.org/2000/svg";
     var E=function(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;};
     var CX=cfg.CX, CY=cfg.CY, RAD=cfg.RAD, GAP=cfg.GAP, DEG=Math.PI/180, amp=cfg.amp, STAGGER=cfg.STAGGER, LOFF=cfg.LOFF;
@@ -74,125 +72,12 @@
       // usando come riferimento il caso originale (280 = metà dei 560 di altezza).
       var k = Math.min(CX,CY)/280;
       if(d<=1)return 116*k;
-      if(_lmode==="hover"){if(d===2)return 200*k;return 300*k;}
-      if(_lmode==="full"){if(d===2)return 210*k;return 312*k;}
-      if(d===2)return 206*k;return 286*k;
+      if(_lmode==="hover"){if(d===2)return 200*k;return (300+(d-3)*100)*k;}
+      if(_lmode==="full"){if(d===2)return 210*k;return (312+(d-3)*102)*k;}
+      if(d===2)return 206*k;return (286+(d-3)*90)*k;
     }
-    var B="https://www.inps.it/it/it";
-    var SC="https://www.inps.it/it/it/dettaglio-scheda.it.schede-servizio-strumento.schede-servizi.";
-    var O=B+"/l-istituto/organi-istituzionali", S=B+"/l-istituto/struttura-organizzativa", CIV=O+"/consiglio-di-indirizzo-e-vigilanza--civ";
-    var tree={label:"INPS",url:B+".html",children:[
-      {label:"Pensione e Previdenza",url:B+"/previdenza.html",children:[
-        {label:"Prestazioni",url:B+"/previdenza.html",children:[
-          {label:"Domanda di pensione",url:B+"/previdenza/domanda-di-pensione.html"},
-          {label:"Fondi e Gestioni",url:B+"/previdenza/fondi-e-gestioni.html"},
-          {label:"Prestiti e anticipi",url:B+"/previdenza/prestiti-e-anticipi.html"},
-          {label:"Benefici e detrazioni",url:B+"/previdenza/benefici-previdenziali-e-detrazioni.html"}
-        ]},
-        {label:"Contributi",url:B+"/previdenza.html",children:[
-          {label:"Versamento Contributi",url:B+"/previdenza/versamento-contributi.html"},
-          {label:"Accredito figurativi",url:B+"/previdenza/accredito-contributi-figurativi.html"},
-          {label:"Rimborso di contributi",url:B+"/previdenza/rimborso-di-contributi.html"},
-          {label:"Ricongiunzioni e riscatti",url:B+"/previdenza/ricongiunzioni-e-riscatti.html"}
-        ]},
-        {label:"Servizi",url:B+"/previdenza.html",children:[
-          {label:"Cedolino della pensione",url:SC+"cedolino-della-pensione-50615.cedolino-della-pensione.html"},
-          {label:"Visualizzazione indebiti",url:SC+"visualizzazione-indebiti.html"},
-          {label:"Stato di una pratica",url:SC+"stato-di-una-pratica-o-di-una-domanda.html"}
-        ]}
-      ]},
-      {label:"Lavoro",url:B+"/lavoro.html",children:[
-        {label:"Tutele",url:B+"/lavoro.html",children:[
-          {label:"Congedi e permessi",url:B+"/lavoro/congedi-permessi-e-certificati.html"},
-          {label:"Disoccupazione",url:B+"/lavoro/disoccupazione.html"},
-          {label:"Malattia",url:B+"/lavoro/malattia.html"},
-          {label:"Integrazioni salariali",url:B+"/lavoro/integrazioni-salariali.html"}
-        ]},
-        {label:"Rapporti di lavoro",url:B+"/lavoro.html",children:[
-          {label:"Contratti di lavoro",url:B+"/lavoro/contratti-rapporti-lavoro.html"},
-          {label:"TFS/TFR",url:B+"/lavoro/tfs-tfr.html"},
-          {label:"Concorsi INPS",url:B+"/lavoro/concorsi-interpelli-e-reclutamenti-inps.html"}
-        ]},
-        {label:"Contributi",url:B+"/lavoro.html",children:[
-          {label:"Contributi dipendenti",url:B+"/lavoro/contributi-dipendenti-e-collaboratori.html"},
-          {label:"Contributi figurativi",url:B+"/lavoro/contributi-figurativi-valorizzazione.html"},
-          {label:"Fondi di garanzia",url:B+"/lavoro/fondo-di-garanzia.html"}
-        ]}
-      ]},
-      {label:"Sostegni, Sussidi e Indennità",url:B+"/sostegni-sussidi-indennita.html",children:[
-        {label:"Famiglia",url:B+"/sostegni-sussidi-indennita.html",children:[
-          {label:"Per genitori",url:B+"/sostegni-sussidi-indennita/per-genitori.html"},
-          {label:"Per nucleo familiare",url:B+"/sostegni-sussidi-indennita/per-nucleo-familiare.html"},
-          {label:"Per superstiti/eredi",url:B+"/sostegni-sussidi-indennita/per-superstiti-eredi.html"}
-        ]},
-        {label:"Reddito e lavoro",url:B+"/sostegni-sussidi-indennita.html",children:[
-          {label:"Per disoccupati",url:B+"/sostegni-sussidi-indennita/per-disoccupati.html"},
-          {label:"Per basso reddito",url:B+"/sostegni-sussidi-indennita/per-persone-a-basso-reddito.html"}
-        ]},
-        {label:"Salute",url:B+"/sostegni-sussidi-indennita.html",children:[
-          {label:"Per disabili e invalidi",url:B+"/sostegni-sussidi-indennita/per-disabili-invalidi-inabili.html"},
-          {label:"Per malattia",url:B+"/sostegni-sussidi-indennita/per-malattia.html"},
-          {label:"Per spese sanitarie",url:B+"/sostegni-sussidi-indennita/per-spese-sanitarie.html"}
-        ]},
-        {label:"Studio",url:B+"/sostegni-sussidi-indennita.html",children:[
-          {label:"Studio e formazione",url:B+"/sostegni-sussidi-indennita/studio-e-formazione.html"}
-        ]}
-      ]},
-      {label:"Imprese e Professionisti",url:B+"/imprese-e-liberi-professionisti.html",children:[
-        {label:"Pagamenti",url:B+"/imprese-e-liberi-professionisti.html",children:[
-          {label:"Rimborsi",url:B+"/imprese-e-liberi-professionisti/rimborsi.html"},
-          {label:"Debiti contributivi",url:B+"/imprese-e-liberi-professionisti/debiti-contributivi.html"},
-          {label:"Incentivi all'assunzione",url:B+"/imprese-e-liberi-professionisti/incentivi-all-assunzione.html"}
-        ]},
-        {label:"Gestione azienda",url:B+"/imprese-e-liberi-professionisti.html",children:[
-          {label:"Apertura/chiusura attività",url:B+"/imprese-e-liberi-professionisti/apertura-variazione-chiusura-azienda-attivita.html"},
-          {label:"Comunicazioni adempimenti",url:B+"/imprese-e-liberi-professionisti/comunicazioni-per-adempimenti-contributivi.html"},
-          {label:"Certificazioni",url:B+"/imprese-e-liberi-professionisti/certificazioni-e-riconoscimenti.html"}
-        ]},
-        {label:"Sostegno",url:B+"/imprese-e-liberi-professionisti.html",children:[
-          {label:"Cassa Integrazione",url:B+"/imprese-e-liberi-professionisti/cassa-integrazione-e-riqualificazione-del-personale.html"},
-          {label:"Lavoratori licenziati",url:B+"/imprese-e-liberi-professionisti/sostegno-ai-lavoratori-licenziati.html"},
-          {label:"Eventi Straordinari",url:B+"/imprese-e-liberi-professionisti/eventi-straordinari.html"}
-        ]}
-      ]},
-      {label:"L'Istituto",url:B+"/l-istituto.html",children:[
-        {label:"Organi istituzionali",url:O+".html",children:[
-          {label:"Presidente",url:O+"/presidente.html"},
-          {label:"Consiglio di Amministrazione",url:O+"/consiglio-di-amministrazione.html"},
-          {label:"CIV",url:CIV+".html"},
-          {label:"Collegio dei Sindaci",url:O+"/collegio-dei-sindaci.html"},
-          {label:"Direttore Generale",url:O+"/direttore-generale.html"}
-        ]},
-        {label:"Struttura organizzativa",url:S+".html",children:[
-          {label:"Direzione Comunicazione",url:S+"/direzioni-centrali/direzione-centrale-comunicazione.html"},
-          {label:"Direzione Entrate",url:S+"/direzioni-centrali/direzione-centrale-entrate.html"},
-          {label:"Direzione Pensioni",url:S+"/direzioni-centrali/direzione-centrale-pensioni.html"},
-          {label:"Direzione Risorse umane",url:S+"/direzioni-centrali/direzione-centrale-risorse-umane.html"},
-          {label:"Uffici centrali",url:S+"/uffici-centrali.html"}
-        ]},
-        {label:"Documenti CIV",url:CIV+".html",children:[
-          {label:"Delibere e Odg",url:CIV+"/delibere-e-odg.html"},
-          {label:"Atti di indirizzo",url:CIV+"/atti-di-indirizzo-e-vigilanza.html"},
-          {label:"Relazioni di verifica",url:CIV+"/atti-di-indirizzo-e-vigilanza/relazioni-di-verifica.html"},
-          {label:"Eventi e pubblicazioni",url:CIV+"/eventi-e-pubblicazioni-del-civ.html"}
-        ]}
-      ]},
-      {label:"Sedi e Contatti",url:B+"/sedi-e-contatti.html",children:[
-        {label:"Canali di contatto",url:B+"/sedi-e-contatti.html",children:[
-          {label:"Contact Center",url:B+"/sedi-e-contatti/contact-center-multicanale.html"},
-          {label:"INPS Risponde",url:B+"/sedi-e-contatti/inps-risponde.html"}
-        ]},
-        {label:"Sul territorio",url:B+"/sedi-e-contatti.html",children:[
-          {label:"Trova la Sede",url:B+"/sedi-e-contatti/trova-la-sede.html"},
-          {label:"Uffici di Patronato",url:B+"/sedi-e-contatti/uffici-di-patronato.html"}
-        ]},
-        {label:"Strumenti",url:B+"/sedi-e-contatti.html",children:[
-          {label:"Mappa del sito",url:B+"/mappa-del-sito.html"},
-          {label:"App INPS Mobile",url:B+"/dettaglio-scheda.it.app.app-inps-mobile.html"}
-        ]}
-      ]}
-    ]};
-    function norm(n){n.children=(n.children||[]).map(function(c){return norm(c);});return n;}
+    var tree = cfg.tree;
+    function norm(n){ n.children=(n.children||[]).map(function(c){return norm(c);}); return n; }
     norm(tree);
 
     var svg=document.getElementById("vmap");
@@ -239,12 +124,10 @@
     function bbox(pred,withLabels){
       var mnX=1e9,mnY=1e9,mxX=-1e9,mxY=-1e9,any=false;
       for(var i=0;i<nodes.length;i++){var n=nodes[i];if(!pred(n))continue;any=true;
-        var pts=[[n.tx,n.ty]];
+        var pts=[[n.tx-RAD,n.ty-RAD],[n.tx+RAD,n.ty+RAD]];
         if(withLabels){
-          var w=(n.lblW||n.label.length*6.0)+12;
-          if(n===home){pts.push([n.tx-w/2,n.ty+RAD+18]);pts.push([n.tx+w/2,n.ty+RAD+18]);}
-          else{var ux=n.tx-CX,uy=n.ty-CY,L=Math.hypot(ux,uy)||1;var ax=n.tx+ux/L*LOFF,ay=n.ty+uy/L*LOFF;
-            var tipx=(ux>=0)?ax+w:ax-w;pts.push([ax,ay]);pts.push([tipx,ay]);pts.push([n.tx,n.ty+13]);pts.push([n.tx,n.ty-13]);}
+          var g=geoT(n,n._disp||n.label,n._lyShift||0);
+          pts.push([g.x0-8,g.y0-8],[g.x1+8,g.y1+8]);
         }
         for(var p=0;p<pts.length;p++){var X=pts[p][0],Y=pts[p][1];if(X<mnX)mnX=X;if(X>mxX)mxX=X;if(Y<mnY)mnY=Y;if(Y>mxY)mxY=Y;}
       }
@@ -254,61 +137,51 @@
     function geoT(n,text,shift){
       n.lbl.textContent=text; var w; try{w=n.lbl.getComputedTextLength();}catch(e){w=text.length*6;}
       var lx,ly,anc;
-      if(n===home){lx=n.tx;ly=n.ty+RAD+14+(shift||0);anc="middle";}
+      if(n._labelPos){lx=n._labelPos.x;ly=n._labelPos.y;anc=n._labelPos.anchor;}
+      else if(n===home){lx=n.tx;ly=n.ty+RAD+14+(shift||0);anc="middle";}
       else{var ux=n.tx-CX,uy=n.ty-CY,L=Math.hypot(ux,uy)||1;lx=n.tx+ux/L*LOFF;ly=n.ty+uy/L*LOFF+(shift||0);anc=(ux>4?"start":(ux<-4?"end":"middle"));}
       var x0=anc==="start"?lx:(anc==="end"?lx-w:lx-w/2);
       return {x0:x0,x1:x0+w,y0:ly-7,y1:ly+7,w:w};
     }
     function hit(b,list){for(var i=0;i<list.length;i++){var o=list[i];if(b.x0<o.x1+3&&b.x1>o.x0-3&&b.y0<o.y1+3&&b.y1>o.y0-3)return true;}return false;}
     function prioritySort(pri){return function(a,b){var pa=(a===pri?0:(a.bright?1:(a.redOutline?2:3+a.depth)));var pb=(b===pri?0:(b.bright?1:(b.redOutline?2:3+b.depth)));return pa-pb;};}
-    function resetLabels(){nodes.forEach(function(n){n._lyShift=0;n._lhidden=false;n._disp=n.label;});}
+    function resetLabels(){nodes.forEach(function(n){n._labelPos=null;n._lyShift=0;n._lhidden=false;n._disp=n.label;});}
     function finishLabels(vis){vis.forEach(function(n){n.lbl.textContent=n._disp;n._curText=n._disp;n.lblW=null;});}
     function resolveNudge(pri){
       resetLabels();
       var vis=nodes.filter(function(n){return !n.hidden;});
       vis.sort(prioritySort(pri));
-      var boxes=[],shifts=[0,13,-13,22,-22,31,-31];
+      var boxes=vis.map(function(n){return {x0:n.tx-RAD-4,x1:n.tx+RAD+4,y0:n.ty-RAD-4,y1:n.ty+RAD+4};});
       vis.forEach(function(n){
-        var chosen=null,cs=0;
-        for(var s=0;s<shifts.length;s++){var g=geoT(n,n.label,shifts[s]);if(!hit(g,boxes)){chosen=g;cs=shifts[s];break;}}
-        if(!chosen){chosen=geoT(n,n.label,0);cs=0;}
-        n._lyShift=cs;boxes.push(chosen);
-      });
-      finishLabels(vis);
-    }
-    function resolveTruncate(pri){
-      // Prima versione: provava solo la posizione base e, se collideva, accorciava
-      // il testo restando fermo lì. Il guaio è che due nodi vicini nello schema
-      // completo restano quasi sempre alla stessa altezza: rimpicciolire la scritta
-      // non li separa, e il risultato erano le etichette impastate una sull'altra
-      // che si vedevano nello screenshot. Ora, esattamente come fa resolveNudge per
-      // la mappa normale, si tentano prima tutti gli spostamenti verticali con il
-      // nome per intero; si passa a tagliare con i puntini solo come ultima risorsa,
-      // continuando comunque a provare le stesse posizioni alternative.
-      resetLabels();
-      var vis=nodes.filter(function(n){return !n.hidden;});
-      vis.sort(prioritySort(pri));
-      var boxes=[],shifts=[0,13,-13,22,-22,31,-31];
-      vis.forEach(function(n){
-        var full=n.label,chosen=null,cs=0,text=full;
-        for(var s=0;s<shifts.length;s++){
-          var g=geoT(n,full,shifts[s]);
-          if(!hit(g,boxes)){chosen=g;cs=shifts[s];break;}
-        }
-        if(!chosen){
-          for(var k=full.length-1;k>=3&&!chosen;k--){
-            var t=full.slice(0,k)+"…";
-            for(var s2=0;s2<shifts.length;s2++){
-              var gg=geoT(n,t,shifts[s2]);
-              if(!hit(gg,boxes)){chosen=gg;cs=shifts[s2];text=t;break;}
-            }
+        var w=n.lbl.getComputedTextLength(), chosen=null, g;
+        var outward=n.tx>=CX?1:-1;
+        // Try all directions near the circle before increasing the distance.
+        for(var gap=6;gap<2000&&!chosen;gap+=5){
+          var r=RAD+gap;
+          var candidates=[
+            {x:n.tx+outward*r,y:n.ty,anchor:outward>0?"start":"end"},
+            {x:n.tx,y:n.ty-r-7,anchor:"middle"},
+            {x:n.tx,y:n.ty+r+7,anchor:"middle"},
+            {x:n.tx-outward*r,y:n.ty,anchor:outward>0?"end":"start"}
+          ];
+          [-1,1].forEach(function(side){
+            [-1,1].forEach(function(vertical){
+              candidates.push({x:n.tx+side*r*.75,y:n.ty+vertical*(r*.75+7),anchor:side>0?"start":"end"});
+            });
+          });
+          for(var c=0;c<candidates.length;c++){
+            var pos=candidates[c];
+            var left=pos.anchor==="start"?pos.x:pos.anchor==="end"?pos.x-w:pos.x-w/2;
+            g={x0:left,x1:left+w,y0:pos.y-7,y1:pos.y+7};
+            if(!hit(g,boxes)){chosen=pos;break;}
           }
         }
-        if(!chosen){text=(full.length<=4)?full:(full.slice(0,3)+"…");chosen=geoT(n,text,0);cs=0;}
-        n._disp=text;n._lyShift=cs;boxes.push(chosen);
+        n._labelPos=chosen;
+        boxes.push(g);
       });
       finishLabels(vis);
     }
+    function resolveTruncate(pri){resolveNudge(pri);}
 
     var statusSpan=document.querySelector("#vstatus span");
     function setStatus(txt){statusSpan.textContent=txt;}
@@ -321,7 +194,7 @@
     function triggerAppear(list,now0){
       list.forEach(function(n){n._rk=Math.random();});
       list.sort(function(a,b){return a.depth-b.depth||a._rk-b._rk;});
-      list.forEach(function(n,k){n.appearing=true;n.appearStart=now0+k*120+Math.random()*55;n.bx=n.parent.bx;n.by=n.parent.by;n.rcur=0;n._lo=0;n._ho=0;});
+      list.forEach(function(n,k){n.appearing=true;n.appearStart=now0+Math.min(k*25,350);n.bx=n.parent.bx;n.by=n.parent.by;n.rcur=0;n._lo=0;n._ho=0;});
     }
     function clearMatches(){nodes.forEach(function(n){n._match=null;});}
     function clearRed(){nodes.forEach(function(n){n.redOutline=false;});nodes.forEach(applyVisual);edges.forEach(function(e){e.el.classList.remove("redhot");});}
@@ -480,162 +353,12 @@
     // rigenerata via boot.toString() e rieseguita nel documento della finestra
     // aperta, con cfg diverso: stessa logica, misure diverse.
     function openSplitView(){
-      var w=window.open("","_blank","width=1180,height=880");
-      if(!w){setStatus("il browser ha bloccato il pop-up: consenti le finestre per la vista affiancata");return;}
-      var vCfg={CX:230,CY:360,RAD:10.5,GAP:4,amp:2.0,STAGGER:38,LOFF:19,closeAction:"window",followZoom:1.7};
-      var appMarkup=
-        '<div class="vpanel" id="vpanel">'+
-          '<div class="vbar">'+
-            '<span class="vaddr">www.inps.it</span>'+
-            '<span class="vicons">'+
-              '<span class="vicon" id="vtri" title="apri lo schema completo" aria-label="schema completo"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 3 L12 11 L2 11 Z" fill="currentColor"/></svg></span>'+
-              '<span class="vicon" id="vfloat" title="finestra a parte sopra il sito" aria-label="finestra a parte sopra il sito"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="3" y="3" width="8" height="8" fill="currentColor"/></svg></span>'+
-              '<span class="vicon" id="vclose" title="Chiudi" aria-label="chiudi"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="4.4" fill="currentColor"/></svg></span>'+
-            '</span>'+
-          '</div>'+
-          '<svg id="vmap" width="100%" viewBox="0 0 '+(2*vCfg.CX)+' '+(2*vCfg.CY)+'" role="img" style="display:block;background:#1b1a19;"></svg>'+
-          '<div class="vfoot">'+
-            '<div class="vsearch"><input id="vq" type="text" placeholder="Sai già cosa cercare?" aria-label="cerca nel sito"/></div>'+
-            '<div class="vstatus" id="vstatus"><span>doppio click su un nodo per aprirlo</span></div>'+
-          '</div>'+
-        '</div>';
-      // Il sito INPS vieta di essere incluso in un frame (X-Frame-Options), quindi
-      // l'iframe restava vuoto con "Connessione negata". Qui il riquadro di sinistra
-      // è una riproduzione statica e fedele della home inps.it, in puro HTML/CSS:
-      // si carica sempre, resta leggera e non dipende dai permessi del sito reale.
-      function inpsCard(tag,date,title,blurb){
-        return '<div class="inps-card"><div class="inps-card-top"><span class="inps-card-ico"></span>'+
-          '<span class="inps-card-tag">'+tag+(date?' <span class="inps-card-date">'+date+'</span>':'')+'</span></div>'+
-          '<div class="inps-card-title">'+title+'</div><div class="inps-card-blurb">'+blurb+'</div>'+
-          '<div class="inps-card-more">'+(tag==='Servizio'?'Accedi al servizio':'Scopri di più')+' \u2192</div></div>';
-      }
-      var inpsSwirl='<svg width="40" height="26" viewBox="0 0 40 26" aria-hidden="true"><path d="M6 13 C6 6.4 13 6.4 18.5 13 C24 19.6 31 19.6 31 13 C31 6.4 24 6.4 18.5 13 C13 19.6 6 19.6 6 13 Z" fill="none" stroke="#0059a9" stroke-width="3.4" stroke-linecap="round"/></svg>';
-      var inpsSearchIco='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0059a9" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7"/><line x1="15.8" y1="15.8" x2="21" y2="21"/></svg>';
-      var sampleMarkup=
-        '<div class="samplepane">'+
-          '<div class="sampleview">'+
-            '<div class="inps">'+
-              '<div class="inps-utility"><div class="inps-wrap inps-utility-in">'+
-                '<nav class="inps-util-links"><a>L\'Istituto</a><a>INPS Comunica</a><a>Dati e Bilanci</a><a>Avvisi, Bandi e Fatturazione</a><a>Sedi e Contatti</a><a>Assistenza</a></nav>'+
-                '<div class="inps-util-right"><span class="inps-lang">ITA \u25be</span><button class="inps-login">Accedi</button></div>'+
-              '</div></div>'+
-              '<div class="inps-head"><div class="inps-wrap inps-head-in">'+
-                '<div class="inps-logo"><span class="inps-logo-mark">'+inpsSwirl+'</span><span class="inps-logo-text">INPS</span></div>'+
-                '<div class="inps-search">'+inpsSearchIco+'<input value="" placeholder="Cerca servizi, informazioni, strumenti. Es.: \u2018Pensione di vecchiaia\u2019" readonly></div>'+
-              '</div></div>'+
-              '<div class="inps-nav"><div class="inps-wrap inps-nav-in">'+
-                '<a class="inps-nav-item">Pensione e Previdenza \u25be</a>'+
-                '<a class="inps-nav-item">Lavoro \u25be</a>'+
-                '<a class="inps-nav-item">Sostegni, Sussidi e Indennità \u25be</a>'+
-                '<a class="inps-nav-item">Imprese e Liberi Professionisti \u25be</a>'+
-              '</div></div>'+
-              '<div class="inps-wrap"><div class="inps-hero">'+
-                '<div class="inps-hero-txt"><h1>L\'INPS è sempre con te.</h1><p>Scopri i servizi e gli strumenti per la tua vita quotidiana.</p><button class="inps-hero-btn">Entra in MyINPS</button></div>'+
-                '<div class="inps-hero-img"></div>'+
-              '</div></div>'+
-              '<div class="inps-wrap"><h2 class="inps-section-title">In evidenza</h2>'+
-                '<div class="inps-cards">'+
-                  inpsCard('Notizia','15/05/2024','Assegno Unico e Universale Figli','Importi, requisiti e come fare domanda.')+
-                  inpsCard('Notizia','10/05/2024','Bonus Psicologo','Al via le domande per il contributo, sessione 2024.')+
-                  inpsCard('Notizia','08/05/2024','Congedo Parentale','Novità e aggiornamenti sulle modalità di fruizione.')+
-                  inpsCard('Servizio','','Estratto Conto Contributivo','Verifica la tua posizione assicurativa.')+
-                '</div>'+
-              '</div>'+
-            '</div>'+
-          '</div>'+
-        '</div>';
-      var css=
-        "@import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700;900&display=swap');"+
-        "*{box-sizing:border-box;}"+
-        "html,body{margin:0;height:100%;background:#141413;}"+
-        "body{display:flex;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;}"+
-        ".splitwrap{display:flex;width:100%;height:100%;}"+
-        ".samplepane{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:#ffffff;}"+
-        ".sampleview{position:relative;flex:1 1 auto;min-height:0;overflow:auto;background:#ffffff;}"+
-        // --- Riproduzione statica della home INPS (font reale Titillium Web) ---
-        ".inps{background:#ffffff;color:#1b1b1b;min-height:100%;font-family:'Titillium Web','Helvetica Neue',Helvetica,Arial,sans-serif;}"+
-        ".inps-wrap{max-width:1080px;margin:0 auto;padding:0 24px;}"+
-        ".inps-utility{border-bottom:1px solid #eaeaea;}"+
-        ".inps-utility-in{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:42px;flex-wrap:wrap;}"+
-        ".inps-util-links{display:flex;gap:17px;flex-wrap:wrap;}"+
-        ".inps-util-links a{font-size:12px;color:#26537e;text-decoration:none;white-space:nowrap;cursor:pointer;}"+
-        ".inps-util-right{display:flex;align-items:center;gap:14px;}"+
-        ".inps-lang{font-size:12px;color:#26537e;}"+
-        ".inps-login{background:#0059a9;color:#fff;border:0;border-radius:4px;padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer;}"+
-        ".inps-head-in{display:flex;align-items:center;gap:26px;padding:16px 0;}"+
-        ".inps-logo{display:flex;align-items:center;gap:9px;flex:0 0 auto;}"+
-        ".inps-logo-mark{display:inline-flex;}"+
-        ".inps-logo-text{font-size:27px;font-weight:700;letter-spacing:.04em;color:#0059a9;}"+
-        ".inps-search{flex:1;min-width:0;display:flex;align-items:center;gap:11px;border:1px solid #cfd6dd;border-radius:6px;padding:0 16px;height:46px;background:#fff;}"+
-        ".inps-search-ico{color:#0059a9;display:inline-flex;flex:0 0 auto;}"+
-        ".inps-search input{border:0;outline:0;flex:1;min-width:0;font-size:14px;font-family:inherit;color:#5b6470;background:transparent;}"+
-        ".inps-nav{border-top:1px solid #ededed;border-bottom:1px solid #ededed;background:#fff;}"+
-        ".inps-nav-in{display:flex;gap:32px;min-height:52px;align-items:center;flex-wrap:wrap;}"+
-        ".inps-nav-item{font-size:14px;font-weight:700;color:#003366;text-decoration:none;white-space:nowrap;cursor:pointer;}"+
-        ".inps-hero{margin:24px 0;border-radius:8px;overflow:hidden;display:flex;min-height:220px;background:linear-gradient(115deg,#0a4f9e,#0b57a4 55%,#1466bd);}"+
-        ".inps-hero-txt{flex:1 1 58%;padding:40px;color:#fff;display:flex;flex-direction:column;justify-content:center;gap:14px;}"+
-        ".inps-hero-txt h1{margin:0;font-size:32px;font-weight:700;line-height:1.08;}"+
-        ".inps-hero-txt p{margin:0;font-size:16px;font-weight:400;opacity:.94;max-width:340px;line-height:1.4;}"+
-        ".inps-hero-btn{align-self:flex-start;margin-top:8px;background:#fff;color:#0059a9;border:0;border-radius:6px;padding:12px 22px;font-size:14px;font-weight:700;cursor:pointer;}"+
-        ".inps-hero-img{flex:0 0 40%;background:linear-gradient(160deg,#0d4d94,#08386e),repeating-linear-gradient(90deg,transparent 0 22px,rgba(255,255,255,.05) 22px 24px),repeating-linear-gradient(0deg,transparent 0 22px,rgba(255,255,255,.05) 22px 24px);}"+
-        ".inps-section-title{font-size:22px;font-weight:700;color:#003366;margin:8px 0 16px;}"+
-        ".inps-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding-bottom:30px;}"+
-        ".inps-card{border:1px solid #e6e6e6;border-radius:8px;padding:18px;display:flex;flex-direction:column;gap:9px;background:#fff;}"+
-        ".inps-card-top{display:flex;align-items:center;gap:8px;}"+
-        ".inps-card-ico{width:26px;height:26px;border-radius:6px;background:#e3edf7;flex:0 0 auto;}"+
-        ".inps-card-tag{font-size:11px;font-weight:600;color:#6a7382;text-transform:uppercase;letter-spacing:.04em;}"+
-        ".inps-card-date{color:#9aa1ac;font-weight:400;}"+
-        ".inps-card-title{font-size:15px;font-weight:700;color:#14203a;line-height:1.25;}"+
-        ".inps-card-blurb{font-size:13px;color:#5c636e;line-height:1.35;flex:1;}"+
-        ".inps-card-more{font-size:13px;font-weight:700;color:#0059a9;}"+
-        "@media(max-width:860px){.inps-cards{grid-template-columns:repeat(2,1fr);}.inps-hero-img{display:none;}}"+
-        "@media(max-width:520px){.inps-cards{grid-template-columns:1fr;}.inps-hero-txt h1{font-size:26px;}}"+
-        // La mappa affiancata: margini laterali ridotti (era padding 28 + colonna fissa larga) e larghezza
-        // ora responsive, con minimo/massimo, così il riquadro resta usabile anche nel suo formato nativo.
-        ".apppane{flex:0 1 clamp(320px,42%,540px);min-width:300px;padding:12px;display:flex;align-items:flex-start;justify-content:center;background:#18100f;border-left:1px solid #2a2927;}"+
-        // --- Finestra staccata (il quadrato la attiva): riquadro QUADRATO in alto a destra.
-        // Il pannello diventa colonna flex (barra + mappa + ricerca) e la mappa (#vmap) prende
-        // tutta l'altezza centrale; il suo viewBox viene riadattato via JS al riquadro reale.
-        ".splitwrap.floating .samplepane{flex:1 1 100%;}"+
-        ".splitwrap.floating .apppane{position:fixed;top:22px;right:22px;bottom:auto;left:auto;flex:none;width:440px;height:440px;min-width:0;max-width:calc(100vw - 44px);max-height:calc(100vh - 44px);padding:0;background:transparent;border-left:0;box-shadow:0 22px 60px rgba(0,0,0,.6);border-radius:12px;z-index:50;}"+
-        ".splitwrap.floating .apppane .vpanel{height:100%;display:flex;flex-direction:column;border-radius:12px;box-shadow:0 0 0 1px rgba(255,255,255,.06);}"+
-        ".splitwrap.floating .apppane #vmap{flex:1 1 0%;min-height:0;width:100%;}"+
-        ".splitwrap.floating .apppane .vbar,.splitwrap.floating .apppane .vfoot{flex:0 0 auto;}"+
-        ".vpanel{background:#1b1a19;overflow:hidden;font-family:inherit;line-height:1.2;width:100%;border-radius:10px;}"+
-        ".vbar{display:flex;align-items:center;gap:10px;padding:11px 15px;}"+
-        ".vaddr{font-size:12px;font-weight:500;color:#ffffff;}"+
-        ".vicons{margin-left:auto;display:flex;align-items:center;gap:6px;}"+
-        ".vicon{color:#76766f;cursor:pointer;display:inline-flex;transition:color .2s ease;}"+
-        ".vicon:hover,.vicon.on{color:#b62118;}"+
-        ".vfoot{padding:12px 15px;}"+
-        ".vsearch{display:flex;align-items:center;width:88%;height:36px;padding:0 12px;background:#2a2927;box-sizing:border-box;}"+
-        ".vsearch input{-webkit-appearance:none!important;appearance:none!important;border:0!important;border-radius:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;margin:0!important;padding:0!important;height:100%!important;box-sizing:border-box!important;flex:1;font-size:12px;font-family:inherit;color:#ffffff;}"+
-        ".vsearch input::placeholder{color:#76766f;}"+
-        ".vstatus{font-size:10px;margin-top:9px;min-height:14px;overflow:hidden;}"+
-        ".vstatus span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#616160;}"+
-        ".edge{stroke:#76766f;stroke-width:1.25;stroke-linecap:round;transition:stroke .3s,stroke-width .3s,opacity .5s;}"+
-        ".edge.hot{stroke:#ffffff;stroke-width:2;}"+
-        ".edge.redhot{stroke:#b62118;stroke-width:2.5;}"+
-        ".edge.hid{opacity:0;}"+
-        ".dot{cursor:pointer;transition:transform .2s ease-out,opacity .55s ease,stroke .3s;transform-box:fill-box;transform-origin:center;}"+
-        ".dot.filled{fill:#ffffff;stroke:#ffffff;stroke-width:1.5;}"+
-        ".dot.outline{fill:#1b1a19;stroke:#ffffff;stroke-width:1.5;}"+
-        ".dot.redpath{stroke:#b62118;stroke-width:2;}"+
-        ".dot.dim{stroke:#76766f;}"+
-        ".dot.hid{opacity:0;pointer-events:none;}"+
-        ".dot:hover{fill:#b62118;stroke:#b62118;transform:scale(1.4);}"+
-        ".dot.home:hover{fill:#ffffff;stroke:#ffffff;transform:scale(1.4);}"+
-        ".nlbl{font-size:11.5px;fill:#bdbcb8;font-family:inherit;pointer-events:none;transition:fill .3s ease;}"+
-        ".nlbl.bright{fill:#ffffff;}"+
-        ".nlbl.off{fill:#76766f;}";
-      var doc=
-        "<!DOCTYPE html><html lang='it'><head><meta charset='utf-8'>"+
-        "<title>Mappa del sito — vista affiancata</title>"+
-        "<style>"+css+"</style></head><body>"+
-        "<div class='splitwrap'>"+sampleMarkup+"<div class='apppane'>"+appMarkup+"</div></div>"+
-        "<script>("+boot.toString()+")("+JSON.stringify(vCfg)+");<\/script>"+
-        "</body></html>";
-      w.document.open();w.document.write(doc);w.document.close();
+      // Nell'estensione la vista affiancata vive in una pagina dedicata
+      // (split.html), non piu' costruita con document.write: quel pattern e'
+      // vietato dalla CSP delle estensioni MV3. La pagina esterna carica lo
+      // stesso engine.js e ricostruisce l'albero dal sitemap del sito.
+      if (typeof cfg.onOpenSplit === "function") { cfg.onOpenSplit(); return; }
+      setStatus("vista affiancata non disponibile in questo contesto");
     }
     var vfullBtn=document.getElementById("vfull");
     if(vfullBtn){vfullBtn.addEventListener("click",function(){openSplitView();});}
@@ -716,7 +439,7 @@
         // (CX,CY) con la stessa formula della modalità schema completo/"search",
         // che infatti era già corretta.
         var b=cam.box,pad=16,bw=Math.max(1,b.maxX-b.minX),bh=Math.max(1,b.maxY-b.minY);
-        var sFit=Math.min((VW-2*pad)/bw,(VH-2*pad)/bh,1);var s=Math.max(sFit,0.78);cam.ts=s;
+        var sFit=Math.min((VW-2*pad)/bw,(VH-2*pad)/bh,1);var s=sFit;cam.ts=s;
         cam.tpx=CX-s*(b.minX+b.maxX)/2;
         cam.tpy=CY-s*(b.minY+b.maxY)/2;
       } else {
@@ -738,8 +461,9 @@
         var disp=n._disp||n.label;
         if(n._curText!==disp){n.lbl.textContent=disp;n._curText=disp;n.lblW=null;}
         var lx,ly,anc,shift=n._lyShift||0;
-        if(n===home){lx=n._dx;ly=n._dy+RAD+14+shift;anc="middle";}
-        else{var ux=n._dx-CX,uy=n._dy-CY,L=Math.hypot(ux,uy)||1;lx=n._dx+ux/L*LOFF;ly=n._dy+uy/L*LOFF+shift;anc=(ux>4?"start":(ux<-4?"end":"middle"));}
+        if(n._labelPos){lx=n._labelPos.x;ly=n._labelPos.y;anc=n._labelPos.anchor;}
+        else if(n===home){lx=n.tx;ly=n.ty+RAD+14+shift;anc="middle";}
+        else{var ux=n.tx-CX,uy=n.ty-CY,L=Math.hypot(ux,uy)||1;lx=n.tx+ux/L*LOFF;ly=n.ty+uy/L*LOFF+shift;anc=(ux>4?"start":(ux<-4?"end":"middle"));}
         n.lbl.setAttribute("x",lx.toFixed(2));n.lbl.setAttribute("y",ly.toFixed(2));n.lbl.setAttribute("text-anchor",anc);
         if(!n.hidden&&n.lblW==null){try{n.lblW=n.lbl.getComputedTextLength();}catch(e){}}
         var labelVisible = !n.hidden && !(n.appearing && n._pr<0.72) && !n._lhidden;
@@ -780,7 +504,127 @@
     }
     requestAnimationFrame(frame);
   }
-
-  boot({CX:380,CY:280,RAD:10.5,GAP:4,amp:2.0,STAGGER:38,LOFF:21,closeAction:"fade"});
+  window.WebNode = window.WebNode || {};
+  window.WebNode.boot = boot;
 })();
-</script>
+
+</script><script>
+(function(){
+    var B="https://www.inps.it/it/it";
+    var SC="https://www.inps.it/it/it/dettaglio-scheda.it.schede-servizio-strumento.schede-servizi.";
+    var O=B+"/l-istituto/organi-istituzionali", S=B+"/l-istituto/struttura-organizzativa", CIV=O+"/consiglio-di-indirizzo-e-vigilanza--civ";
+    var tree={label:"INPS",url:B+".html",children:[
+      {label:"Pensione e Previdenza",url:B+"/previdenza.html",children:[
+        {label:"Prestazioni",url:B+"/previdenza.html",children:[
+          {label:"Domanda di pensione",url:B+"/previdenza/domanda-di-pensione.html"},
+          {label:"Fondi e Gestioni",url:B+"/previdenza/fondi-e-gestioni.html"},
+          {label:"Prestiti e anticipi",url:B+"/previdenza/prestiti-e-anticipi.html"},
+          {label:"Benefici e detrazioni",url:B+"/previdenza/benefici-previdenziali-e-detrazioni.html"}
+        ]},
+        {label:"Contributi",url:B+"/previdenza.html",children:[
+          {label:"Versamento Contributi",url:B+"/previdenza/versamento-contributi.html"},
+          {label:"Accredito figurativi",url:B+"/previdenza/accredito-contributi-figurativi.html"},
+          {label:"Rimborso di contributi",url:B+"/previdenza/rimborso-di-contributi.html"},
+          {label:"Ricongiunzioni e riscatti",url:B+"/previdenza/ricongiunzioni-e-riscatti.html"}
+        ]},
+        {label:"Servizi",url:B+"/previdenza.html",children:[
+          {label:"Cedolino della pensione",url:SC+"cedolino-della-pensione-50615.cedolino-della-pensione.html"},
+          {label:"Visualizzazione indebiti",url:SC+"visualizzazione-indebiti.html"},
+          {label:"Stato di una pratica",url:SC+"stato-di-una-pratica-o-di-una-domanda.html"}
+        ]}
+      ]},
+      {label:"Lavoro",url:B+"/lavoro.html",children:[
+        {label:"Tutele",url:B+"/lavoro.html",children:[
+          {label:"Congedi e permessi",url:B+"/lavoro/congedi-permessi-e-certificati.html"},
+          {label:"Disoccupazione",url:B+"/lavoro/disoccupazione.html"},
+          {label:"Malattia",url:B+"/lavoro/malattia.html"},
+          {label:"Integrazioni salariali",url:B+"/lavoro/integrazioni-salariali.html"}
+        ]},
+        {label:"Rapporti di lavoro",url:B+"/lavoro.html",children:[
+          {label:"Contratti di lavoro",url:B+"/lavoro/contratti-rapporti-lavoro.html"},
+          {label:"TFS/TFR",url:B+"/lavoro/tfs-tfr.html"},
+          {label:"Concorsi INPS",url:B+"/lavoro/concorsi-interpelli-e-reclutamenti-inps.html"}
+        ]},
+        {label:"Contributi",url:B+"/lavoro.html",children:[
+          {label:"Contributi dipendenti",url:B+"/lavoro/contributi-dipendenti-e-collaboratori.html"},
+          {label:"Contributi figurativi",url:B+"/lavoro/contributi-figurativi-valorizzazione.html"},
+          {label:"Fondi di garanzia",url:B+"/lavoro/fondo-di-garanzia.html"}
+        ]}
+      ]},
+      {label:"Sostegni, Sussidi e Indennità",url:B+"/sostegni-sussidi-indennita.html",children:[
+        {label:"Famiglia",url:B+"/sostegni-sussidi-indennita.html",children:[
+          {label:"Per genitori",url:B+"/sostegni-sussidi-indennita/per-genitori.html"},
+          {label:"Per nucleo familiare",url:B+"/sostegni-sussidi-indennita/per-nucleo-familiare.html"},
+          {label:"Per superstiti/eredi",url:B+"/sostegni-sussidi-indennita/per-superstiti-eredi.html"}
+        ]},
+        {label:"Reddito e lavoro",url:B+"/sostegni-sussidi-indennita.html",children:[
+          {label:"Per disoccupati",url:B+"/sostegni-sussidi-indennita/per-disoccupati.html"},
+          {label:"Per basso reddito",url:B+"/sostegni-sussidi-indennita/per-persone-a-basso-reddito.html"}
+        ]},
+        {label:"Salute",url:B+"/sostegni-sussidi-indennita.html",children:[
+          {label:"Per disabili e invalidi",url:B+"/sostegni-sussidi-indennita/per-disabili-invalidi-inabili.html"},
+          {label:"Per malattia",url:B+"/sostegni-sussidi-indennita/per-malattia.html"},
+          {label:"Per spese sanitarie",url:B+"/sostegni-sussidi-indennita/per-spese-sanitarie.html"}
+        ]},
+        {label:"Studio",url:B+"/sostegni-sussidi-indennita.html",children:[
+          {label:"Studio e formazione",url:B+"/sostegni-sussidi-indennita/studio-e-formazione.html"}
+        ]}
+      ]},
+      {label:"Imprese e Professionisti",url:B+"/imprese-e-liberi-professionisti.html",children:[
+        {label:"Pagamenti",url:B+"/imprese-e-liberi-professionisti.html",children:[
+          {label:"Rimborsi",url:B+"/imprese-e-liberi-professionisti/rimborsi.html"},
+          {label:"Debiti contributivi",url:B+"/imprese-e-liberi-professionisti/debiti-contributivi.html"},
+          {label:"Incentivi all'assunzione",url:B+"/imprese-e-liberi-professionisti/incentivi-all-assunzione.html"}
+        ]},
+        {label:"Gestione azienda",url:B+"/imprese-e-liberi-professionisti.html",children:[
+          {label:"Apertura/chiusura attività",url:B+"/imprese-e-liberi-professionisti/apertura-variazione-chiusura-azienda-attivita.html"},
+          {label:"Comunicazioni adempimenti",url:B+"/imprese-e-liberi-professionisti/comunicazioni-per-adempimenti-contributivi.html"},
+          {label:"Certificazioni",url:B+"/imprese-e-liberi-professionisti/certificazioni-e-riconoscimenti.html"}
+        ]},
+        {label:"Sostegno",url:B+"/imprese-e-liberi-professionisti.html",children:[
+          {label:"Cassa Integrazione",url:B+"/imprese-e-liberi-professionisti/cassa-integrazione-e-riqualificazione-del-personale.html"},
+          {label:"Lavoratori licenziati",url:B+"/imprese-e-liberi-professionisti/sostegno-ai-lavoratori-licenziati.html"},
+          {label:"Eventi Straordinari",url:B+"/imprese-e-liberi-professionisti/eventi-straordinari.html"}
+        ]}
+      ]},
+      {label:"L'Istituto",url:B+"/l-istituto.html",children:[
+        {label:"Organi istituzionali",url:O+".html",children:[
+          {label:"Presidente",url:O+"/presidente.html"},
+          {label:"Consiglio di Amministrazione",url:O+"/consiglio-di-amministrazione.html"},
+          {label:"CIV",url:CIV+".html"},
+          {label:"Collegio dei Sindaci",url:O+"/collegio-dei-sindaci.html"},
+          {label:"Direttore Generale",url:O+"/direttore-generale.html"}
+        ]},
+        {label:"Struttura organizzativa",url:S+".html",children:[
+          {label:"Direzione Comunicazione",url:S+"/direzioni-centrali/direzione-centrale-comunicazione.html"},
+          {label:"Direzione Entrate",url:S+"/direzioni-centrali/direzione-centrale-entrate.html"},
+          {label:"Direzione Pensioni",url:S+"/direzioni-centrali/direzione-centrale-pensioni.html"},
+          {label:"Direzione Risorse umane",url:S+"/direzioni-centrali/direzione-centrale-risorse-umane.html"},
+          {label:"Uffici centrali",url:S+"/uffici-centrali.html"}
+        ]},
+        {label:"Documenti CIV",url:CIV+".html",children:[
+          {label:"Delibere e Odg",url:CIV+"/delibere-e-odg.html"},
+          {label:"Atti di indirizzo",url:CIV+"/atti-di-indirizzo-e-vigilanza.html"},
+          {label:"Relazioni di verifica",url:CIV+"/atti-di-indirizzo-e-vigilanza/relazioni-di-verifica.html"},
+          {label:"Eventi e pubblicazioni",url:CIV+"/eventi-e-pubblicazioni-del-civ.html"}
+        ]}
+      ]},
+      {label:"Sedi e Contatti",url:B+"/sedi-e-contatti.html",children:[
+        {label:"Canali di contatto",url:B+"/sedi-e-contatti.html",children:[
+          {label:"Contact Center",url:B+"/sedi-e-contatti/contact-center-multicanale.html"},
+          {label:"INPS Risponde",url:B+"/sedi-e-contatti/inps-risponde.html"}
+        ]},
+        {label:"Sul territorio",url:B+"/sedi-e-contatti.html",children:[
+          {label:"Trova la Sede",url:B+"/sedi-e-contatti/trova-la-sede.html"},
+          {label:"Uffici di Patronato",url:B+"/sedi-e-contatti/uffici-di-patronato.html"}
+        ]},
+        {label:"Strumenti",url:B+"/sedi-e-contatti.html",children:[
+          {label:"Mappa del sito",url:B+"/mappa-del-sito.html"},
+          {label:"App INPS Mobile",url:B+"/dettaglio-scheda.it.app.app-inps-mobile.html"}
+        ]}
+      ]}
+    ]};
+
+WebNode.boot({CX:380,CY:280,RAD:10.5,GAP:4,amp:2,STAGGER:38,LOFF:21,tree:tree});
+})();
+</script></html>
