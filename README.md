@@ -1,24 +1,18 @@
-# Design ostativo — Web Node V2
+# Design ostativo — Web Node
 
-Prototipo di navigazione a nodi di Lorenzo Casetta, sviluppato nell’ambito della tesi *Design ostativo. I dark pattern e l’asimmetria normativa tra privato e pubblica amministrazione*, Università Iuav di Venezia, 2026.
+Un navigatore per orientarsi nei siti web, di Lorenzo Casetta.
 
-[Apri Web Node V2](https://lorenzocasetta.github.io/design_ostativo/)
+## Web Node 3.0 — estensione
 
-## V2
+[Scarica Web Node 3.0](downloads/Web_Node_V3.zip) · [Sorgenti e installazione](extension-v3/README.md)
 
-- Albero INPS su livelli concentrici.
-- Etichette complete posizionate vicino al proprio nodo, cercando spazio in più direzioni.
-- Inquadratura che considera l’ingombro dei testi.
-- Ricerca dei nomi e apertura dei collegamenti con doppio click.
-- Il triangolo apre o richiude lo schema completo.
+Versione approvata per interazioni, zoom, camera al puntatore e riorganizzazione dei collegamenti. **Problema noto: lo split non funziona nel collaudo su Arc**, con errore di connessione al componente ricevente. La correzione prosegue nella V4, non ancora definitiva.
 
-La pagina contiene gli 85 nodi del prototipo INPS: non effettua una scansione live e non rappresenta l’alberatura completa o necessariamente aggiornata del sito. L’estensione per la lettura di altri siti è un lavoro distinto, ancora da collaudare. La vista affiancata non è disponibile in questa versione web.
+## Prototipo web V2
 
-## Uso locale
+[Apri il prototipo INPS](https://lorenzocasetta.github.io/design_ostativo/). Contiene l’albero INPS del prototipo; l’estensione V3 legge i collegamenti della pagina attiva.
 
-Scaricare e aprire `index.html` in un browser. Il file include stili, dati e motore di visualizzazione e non richiede installazioni.
-
-## Riferimento
+## Ricerca
 
 Casetta, L. (2026). *Design ostativo. I dark pattern e l’asimmetria normativa tra privato e pubblica amministrazione*. Università Iuav di Venezia.
 

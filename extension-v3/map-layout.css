@@ -1,0 +1,10 @@
+
+*{box-sizing:border-box}html,body,#vpanel{margin:0;width:100%;height:100%;overflow:hidden;background:#1b1a19;min-width:0}
+#vpanel{display:flex;flex-direction:column;font-family:Helvetica,Arial,sans-serif}
+.vbar{flex:none;gap:8px;padding:12px}.vaddr{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vicons{display:flex;flex:none;gap:5px;margin:0}
+.vicon{appearance:none;border:0!important;background:none!important;padding:4px;display:inline-flex;align-items:center;justify-content:center;color:#76766f;cursor:pointer;box-shadow:none;border-radius:0}
+.vicon:hover,.vicon.on,.vicon.zoom{color:#b62118}.vicon:focus-visible{outline:1px solid #b62118}
+#viewport{flex:1;min-height:0;overflow:hidden;position:relative}#vmap{display:block;width:100%;height:100%;background:#1b1a19}
+.vfoot{flex:none;padding:10px 12px}.vsearch{width:100%;height:34px}.vsearch input{min-width:0;width:100%}
+.vstatus{margin-top:5px;font-size:10px;height:14px;min-height:14px}.vstatus span{display:block;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
