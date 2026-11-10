@@ -1,0 +1,469 @@
+/* Web Node — motore di visualizzazione (ricavato dal tuo Web_Node.html).
+   Logica di layout/animazione: la tua, invariata. Modifiche minime:
+   - l'albero arriva da cfg.tree (costruito dal sitemap del sito), non piu' cablato;
+   - niente document.write per la vista affiancata (vietato dalla CSP MV3):
+     il pulsante quadrato chiama cfg.onOpenSplit();
+   - boot NON viene auto-invocato: e' esposto come window.WebNode.boot. */
+(function(){
+  "use strict";
+function boot(cfg){
+    var ui=cfg.root||document;
+    var NS="http://www.w3.org/2000/svg";
+    var E=function(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;};
+    var CX=cfg.CX, CY=cfg.CY, RAD=cfg.RAD, GAP=cfg.GAP, DEG=Math.PI/180, amp=cfg.amp, STAGGER=cfg.STAGGER, LOFF=cfg.LOFF;
+    var VW=2*CX-40, VH=2*CY-40;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+    function easeOutBack(t){var c1=1.2,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);}
+    var _lmode="search", _full=false, _focusNode=null;
+    function depthRadius(d){
+      // I raggi erano numeri fissi pensati per il riquadro largo 760x560. Nella
+      // vista affiancata il riquadro è più stretto, quindi li scalo in base a
+      // quanto è piccola la dimensione che stringe di più (di solito la larghezza),
+      // usando come riferimento il caso originale (280 = metà dei 560 di altezza).
+      var k = Math.min(CX,CY)/280;
+      if(d<=1)return 116*k;
+      if(_lmode==="hover"){if(d===2)return 200*k;return (300+(d-3)*100)*k;}
+      if(_lmode==="full"){if(d===2)return 210*k;return (312+(d-3)*102)*k;}
+      if(d===2)return 206*k;return (286+(d-3)*90)*k;
+    }
+    var tree = cfg.tree;
+    function norm(n){ n.children=(n.children||[]).map(function(c){return norm(c);}); return n; }
+    norm(tree);
+
+    var svg=ui.getElementById("vmap");
+    svg.setAttribute("viewBox","0 0 "+(2*CX)+" "+(2*CY)); // ridondante sulla pagina principale, ma tiene sincronizzata la finestra affiancata senza dover copiare i numeri a mano nel markup
+    var defs=E("defs",{});
+    defs.innerHTML='<radialGradient id="vhalo" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#1b1a19" stop-opacity="1"/><stop offset="60%" stop-color="#1b1a19" stop-opacity="1"/><stop offset="100%" stop-color="#1b1a19" stop-opacity="0"/></radialGradient><radialGradient id="vglow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#2d1513" stop-opacity="1"/><stop offset="58%" stop-color="#241312" stop-opacity="0.97"/><stop offset="100%" stop-color="#1b1a19" stop-opacity="0"/></radialGradient>';
+    svg.appendChild(defs);
+    var cam=E("g",{}); svg.appendChild(cam);
+    var edgeLayer=E("g",{}), haloLayer=E("g",{}), nodeLayer=E("g",{}), lblLayer=E("g",{}), focusLayer=E("g",{});
+    cam.appendChild(edgeLayer);cam.appendChild(haloLayer);cam.appendChild(nodeLayer);cam.appendChild(lblLayer);cam.appendChild(focusLayer);
+    var nodes=[], edges=[], sections=[], home, hoveredNode=null;
+    function build(node,parent,depth){
+      node.depth=depth;node.parent=parent;node.url=node.url||"#";
+      node.bx=CX;node.by=CY;node.tx=CX;node.ty=CY;node.ox=0;node.oy=0;node._ang=0;node._rOff=0;node._dx=CX;node._dy=CY;
+      node.rcur=depth<=1?RAD:0;node.appearing=false;node.appearStart=0;node.lblW=null;node.wob=1;node._rk=0;node._pr=1;
+      node._lo=(depth<=1?1:0);node._ho=(depth<=1?1:0);node._ulo=0;node._ux1=CX;node._ux2=CX;node._uy=CY;
+      node.p1=Math.random()*6.28;node.p2=Math.random()*6.28;node.hidden=depth>=2;
+      node.fill=depth===0?"filled":"outline";node.dim=false;node.bright=false;node.redOutline=false;node._match=null;
+      node._disp=node.label;node._curText=node.label;node._lyShift=0;node._lhidden=false;node._focus=false;
+      node.el=E("circle",{class:"dot "+node.fill+(depth>=2?" hid":""),r:node.rcur,cx:CX,cy:CY});
+      var tooltip=E("title",{});tooltip.textContent=node.fullLabel||node.label;node.el.appendChild(tooltip);
+      node.halo=E("ellipse",{fill:"url(#vhalo)",rx:0,ry:11.5,cx:CX,cy:CY,opacity:0,"pointer-events":"none"});
+      node.lbl=E("text",{class:"nlbl",x:CX,y:CY,"text-anchor":"middle","dominant-baseline":"central"});
+      node.lbl.style.opacity=node._lo; node.lbl.textContent=node.label;
+      node.ul=E("line",{stroke:"#b62118","stroke-width":1.8,"stroke-linecap":"round","pointer-events":"none",x1:0,y1:0,x2:0,y2:0,opacity:0});
+      haloLayer.appendChild(node.halo);nodeLayer.appendChild(node.el);lblLayer.appendChild(node.lbl);lblLayer.appendChild(node.ul);
+      if(parent){node.inEdge={from:parent,to:node,el:E("line",{class:"edge"+(depth>=2?" hid":""),x1:CX,y1:CY,x2:CX,y2:CY})};edgeLayer.appendChild(node.inEdge.el);edges.push(node.inEdge);}
+      nodes.push(node);if(depth===1)sections.push(node);
+      node.children.forEach(function(c){build(c,node,depth+1);});
+    }
+    build(tree,null,0);home=tree;
+    sections.forEach(function(s,i){s.angle0=(-90+i*(360/sections.length))*DEG;});
+
+    function leafCount(n,inc){var k=n.children.filter(inc);if(!k.length)return 1;var s=0;for(var i=0;i<k.length;i++)s+=leafCount(k[i],inc);return s;}
+    function layoutNode(node,a0,a1,inc){
+      node._ang=(a0+a1)/2;
+      if(_lmode==="hover"&&node.depth>=2){
+        // Grow from the parent, not from the central circle: every branch
+        // advances outward and its middle extends farther than its edges.
+        var scale=Math.min(CX,CY)/280;
+        var delta=node._ang-node.parent._ang;
+        var reach=(145+Math.min(3,node.depth-2)*16)*scale*(1+0.22*Math.cos(delta));
+        node.tx=node.parent.tx+reach*Math.cos(node._ang);
+        node.ty=node.parent.ty+reach*Math.sin(node._ang);
+      }else if(node.depth>=1){var R=depthRadius(node.depth)+(node._rOff||0);node.tx=CX+R*Math.cos(node._ang);node.ty=CY+R*Math.sin(node._ang);}
+      var kids=node.children.filter(inc);
+      if(!kids.length)return;
+      var tot=0,lc=[];for(var i=0;i<kids.length;i++){lc[i]=leafCount(kids[i],inc);tot+=lc[i];}
+      if(!tot)tot=kids.length;
+      var a=a0;
+      for(var j=0;j<kids.length;j++){kids[j]._rOff=(j%2)*STAGGER;var w=(a1-a0)*(lc[j]/tot);layoutNode(kids[j],a,a+w,inc);a+=w;}
+    }
+    function bbox(pred,withLabels){
+      var mnX=1e9,mnY=1e9,mxX=-1e9,mxY=-1e9,any=false;
+      for(var i=0;i<nodes.length;i++){var n=nodes[i];if(!pred(n))continue;any=true;
+        var pts=[[n.tx-RAD,n.ty-RAD],[n.tx+RAD,n.ty+RAD]];
+        if(withLabels){
+          var g=geoT(n,n._disp||n.label,n._lyShift||0);
+          pts.push([g.x0-8,g.y0-8],[g.x1+8,g.y1+8]);
+        }
+        for(var p=0;p<pts.length;p++){var X=pts[p][0],Y=pts[p][1];if(X<mnX)mnX=X;if(X>mxX)mxX=X;if(Y<mnY)mnY=Y;if(Y>mxY)mxY=Y;}
+      }
+      return any?{minX:mnX,minY:mnY,maxX:mxX,maxY:mxY}:null;
+    }
+
+    function geoT(n,text,shift){
+      n.lbl.textContent=text; var w; try{w=n.lbl.getComputedTextLength();}catch(e){w=text.length*6;}
+      var lx,ly,anc;
+      if(n._labelPos){lx=n._labelPos.x;ly=n._labelPos.y;anc=n._labelPos.anchor;}
+      else if(n===home){lx=n.tx;ly=n.ty-RAD-14;anc="middle";}
+      else{var ux=n.tx-CX,uy=n.ty-CY,L=Math.hypot(ux,uy)||1;lx=n.tx+ux/L*LOFF;ly=n.ty+uy/L*LOFF+(shift||0);anc=(ux>4?"start":(ux<-4?"end":"middle"));}
+      var x0=anc==="start"?lx:(anc==="end"?lx-w:lx-w/2);
+      return {x0:x0,x1:x0+w,y0:ly-7,y1:ly+7,w:w};
+    }
+    function hit(b,list){for(var i=0;i<list.length;i++){var o=list[i];if(b.x0<o.x1+3&&b.x1>o.x0-3&&b.y0<o.y1+3&&b.y1>o.y0-3)return true;}return false;}
+    function prioritySort(pri){return function(a,b){var pa=(a===pri?0:(a.bright?1:(a.redOutline?2:3+a.depth)));var pb=(b===pri?0:(b.bright?1:(b.redOutline?2:3+b.depth)));return pa-pb;};}
+    function resetLabels(){nodes.forEach(function(n){n._labelPos=null;n._lyShift=0;n._lhidden=false;n._disp=n.label;});}
+    function finishLabels(vis){vis.forEach(function(n){n.lbl.textContent=n._disp;n._curText=n._disp;n.lblW=null;});}
+    function resolveNudge(pri){
+      resetLabels();
+      var vis=nodes.filter(function(n){return !n.hidden;});
+      vis.sort(function(a,b){return a===home?-1:b===home?1:prioritySort(pri)(a,b);});
+      var boxes=vis.map(function(n){return {x0:n.tx-RAD-4,x1:n.tx+RAD+4,y0:n.ty-RAD-4,y1:n.ty+RAD+4};});
+      vis.forEach(function(n){
+        var w=n.lbl.getComputedTextLength(), chosen=null, g;
+        if(n===home){n._labelPos={x:n.tx,y:n.ty-RAD-14,anchor:"middle"};boxes.push({x0:n.tx-w/2,x1:n.tx+w/2,y0:n.ty-RAD-21,y1:n.ty-RAD-7});return;}
+        var outward=n.tx>=CX?1:-1;
+        // Try all directions near the circle before increasing the distance.
+        for(var gap=6;gap<2000&&!chosen;gap+=5){
+          var r=RAD+gap;
+          var candidates=[
+            {x:n.tx+outward*r,y:n.ty,anchor:outward>0?"start":"end"},
+            {x:n.tx,y:n.ty-r-7,anchor:"middle"},
+            {x:n.tx,y:n.ty+r+7,anchor:"middle"},
+            {x:n.tx-outward*r,y:n.ty,anchor:outward>0?"end":"start"}
+          ];
+          [-1,1].forEach(function(side){
+            [-1,1].forEach(function(vertical){
+              candidates.push({x:n.tx+side*r*.75,y:n.ty+vertical*(r*.75+7),anchor:side>0?"start":"end"});
+            });
+          });
+          for(var c=0;c<candidates.length;c++){
+            var pos=candidates[c];
+            var left=pos.anchor==="start"?pos.x:pos.anchor==="end"?pos.x-w:pos.x-w/2;
+            g={x0:left,x1:left+w,y0:pos.y-7,y1:pos.y+7};
+            if(!hit(g,boxes)){chosen=pos;break;}
+          }
+        }
+        n._labelPos=chosen;
+        boxes.push(g);
+      });
+      finishLabels(vis);
+    }
+    function resolveTruncate(pri){resolveNudge(pri);}
+
+    var statusSpan=ui.querySelector("#vstatus span");
+    function setStatus(txt){statusSpan.textContent=txt;}
+    function cleanUrl(u){u=(u||'').replace(/^https?:\/\//,'');if(u.length>62)u=u.slice(0,59)+'…';return u;}
+    function applyVisual(n){
+      n.el.setAttribute("class","dot "+n.fill+(n===home?" home":"")+(n.hidden?" hid":"")+(n.dim?" dim":"")+(n.redOutline?" redpath":""));
+      n.lbl.setAttribute("class","nlbl"+((n.bright||n.redOutline)?" bright":"")+(n.dim?" off":""));
+      if(n.inEdge)n.inEdge.el.classList.toggle("hid",n.hidden);
+    }
+    function triggerAppear(list,now0){
+      list.forEach(function(n){n._rk=Math.random();});
+      list.sort(function(a,b){return a.depth-b.depth||a._rk-b._rk;});
+      list.forEach(function(n,k){n.appearing=true;n.appearStart=now0+Math.min(k*25,350);n.bx=n.parent.bx;n.by=n.parent.by;n.rcur=0;n._lo=0;n._ho=0;});
+    }
+    function clearMatches(){nodes.forEach(function(n){n._match=null;});}
+    function clearRed(){nodes.forEach(function(n){n.redOutline=false;});nodes.forEach(applyVisual);edges.forEach(function(e){e.el.classList.remove("redhot");});}
+
+    function moveToFocus(n){
+      if(!n||n===home)return;
+      n.halo.setAttribute("fill","url(#vglow)");
+      focusLayer.appendChild(n.halo);focusLayer.appendChild(n.lbl);focusLayer.appendChild(n.ul);
+      // n.el (il pallino) di proposito NON viene più spostato qui. Portarlo avanti
+      // e indietro fra i gruppi mentre il mouse ci stava sopra gli faceva perdere
+      // per un frame lo stato :hover del CSS (o interrompeva la transizione dello
+      // scale), ed era quello lo sfarfallio sul nodo appena lasciato segnalato in
+      // fase di test. L'alone e l'etichetta sopra a tutto bastano per leggerla bene,
+      // il pallino può restare nel suo layer normale.
+      n._focus=true;
+    }
+    function clearFocus(n){
+      if(!n)return;
+      n.halo.setAttribute("fill","url(#vhalo)");
+      haloLayer.appendChild(n.halo);lblLayer.appendChild(n.lbl);lblLayer.appendChild(n.ul);
+      n._focus=false;
+    }
+    function applyFocus(n){if(_focusNode&&_focusNode!==n)clearFocus(_focusNode);if(n&&n!==home){moveToFocus(n);_focusNode=n;}else{_focusNode=null;}}
+
+    function setLayout(H,red){
+      if(red===undefined)red=true;
+      _lmode="hover";
+      clearMatches();
+      nodes.forEach(function(n){n._oldHidden=n.hidden;});
+      nodes.forEach(function(n){n._vis=(n.depth<=1);n._exp=false;n.bright=false;n.dim=false;n.redOutline=false;n.fill=(n===home?"filled":"outline");n._rOff=0;});
+      var section=null,redPath=[];
+      if(H){section=H;while(section.depth>1)section=section.parent;
+        for(var pp=H;pp&&pp.depth>=1;pp=pp.parent){if(pp.children.length)pp._exp=true;}
+        for(var qq=H;qq;qq=qq.parent)redPath.push(qq);}
+      var asc=nodes.slice().sort(function(a,b){return a.depth-b.depth;});
+      asc.forEach(function(n){if(n.depth>1)n._vis=n.parent._vis&&n.parent._exp;});
+      home.tx=CX;home.ty=CY;home._ang=0;
+      sections.forEach(function(s){var R=depthRadius(1);s.tx=CX+R*Math.cos(s.angle0);s.ty=CY+R*Math.sin(s.angle0);s._ang=s.angle0;});
+      if(section){
+        var lc=leafCount(section,function(n){return n._vis;});
+        var wdeg=Math.max(58,Math.min(155,lc*13));
+        var W=wdeg*DEG;
+        layoutNode(section, section.angle0-W/2, section.angle0+W/2, function(n){return n._vis;});
+        sections.forEach(function(s){if(s!==section)s.dim=true;});
+      }
+      nodes.forEach(function(n){if(n.depth>=2)n.hidden=!n._vis;});
+      asc.forEach(function(n){if(n.depth>=2&&n.hidden){n.tx=n.parent.tx;n.ty=n.parent.ty;}});
+      if(red)redPath.forEach(function(n){if(n!==home)n.redOutline=true;});
+      var newly=[];asc.forEach(function(n){if(n._oldHidden&&!n.hidden&&n.parent)newly.push(n);});
+      triggerAppear(newly,performance.now());
+      nodes.forEach(applyVisual);
+      edges.forEach(function(e){e.el.classList.remove("hot");e.el.classList.remove("redhot");});
+      if(red)redPath.forEach(function(node){if(node.inEdge)node.inEdge.el.classList.add("redhot");});
+      resolveNudge(H||null);
+      if(section){cam.mode="hover";cam.box=bbox(function(n){return !n.hidden&&!n.dim;},true);}
+      else{cam.mode="idle";cam.box=null;}
+    }
+
+    function searchLayout(matches){
+      _lmode="search";
+      nodes.forEach(function(n){n._oldHidden=n.hidden;});
+      var revealed={};function reveal(n){for(var p=n;p;p=p.parent)revealed[nodes.indexOf(p)]=true;}
+      matches.forEach(reveal);
+      function isRev(n){return revealed[nodes.indexOf(n)]===true;}
+      nodes.forEach(function(n){n.bright=false;n.dim=false;n.redOutline=false;n.fill=(n===home?"filled":"outline");n._rOff=0;});
+      nodes.forEach(function(n){n.hidden=(n!==home)&&!isRev(n);});
+      home.tx=CX;home.ty=CY;home._ang=0;
+      sections.forEach(function(s){var R=depthRadius(1);s.tx=CX+R*Math.cos(s.angle0);s.ty=CY+R*Math.sin(s.angle0);s._ang=s.angle0;});
+      var inc=function(n){return isRev(n);};
+      var revSecs=sections.filter(isRev).sort(function(a,b){return a.angle0-b.angle0;});
+      if(revSecs.length){
+        var ns=revSecs.length, gap=(ns>1?9*DEG:0), usable=2*Math.PI-gap*ns;
+        var tot=0,lc=[];revSecs.forEach(function(s,i){lc[i]=leafCount(s,inc);tot+=lc[i];});if(!tot)tot=ns;
+        var a=-Math.PI/2;
+        revSecs.forEach(function(s,i){var w=usable*(lc[i]/tot);layoutNode(s,a,a+w,inc);a+=w+gap;});
+      }
+      nodes.forEach(function(n){if(n.hidden){n.tx=home.tx;n.ty=home.ty;}});
+      matches.forEach(function(m){m.fill="filled";m.bright=true;});
+      var newly=[];nodes.slice().sort(function(a,b){return a.depth-b.depth;}).forEach(function(n){if(n._oldHidden&&!n.hidden&&n.parent)newly.push(n);});
+      triggerAppear(newly,performance.now());
+      nodes.forEach(applyVisual);
+      edges.forEach(function(e){e.el.classList.remove("redhot");e.el.classList.toggle("hot",!e.to.hidden&&!e.from.hidden);});
+      resolveNudge(null);
+      cam.box=bbox(function(n){return !n.hidden;},true);cam.mode="search";
+    }
+
+    function openAll(){
+      _full=true;_lmode="full";clearMatches();
+      nodes.forEach(function(n){n._oldHidden=n.hidden;});
+      nodes.forEach(function(n){n.bright=false;n.dim=false;n.redOutline=false;n.fill=(n===home?"filled":"outline");n._rOff=0;n.hidden=false;});
+      home.tx=CX;home.ty=CY;home._ang=0;
+      var inc=function(){return true;};
+      // il gap fra le sezioni era 6°: portato a 9° (uguale a quello della ricerca)
+      // per dare un po' più di respiro fra un ramo e l'altro prima ancora che
+      // entri in gioco resolveTruncate — meno affollamento a monte, meno lavoro
+      // da fare a valle per separare le etichette.
+      var ns=sections.length, gap=9*DEG, usable=2*Math.PI-gap*ns;
+      var tot=0,lc=[];sections.forEach(function(s,i){lc[i]=leafCount(s,inc);tot+=lc[i];});if(!tot)tot=ns;
+      var a=-Math.PI/2;
+      sections.forEach(function(s,i){var w=usable*(lc[i]/tot);layoutNode(s,a,a+w,inc);a+=w+gap;});
+      var newly=[];nodes.slice().sort(function(a,b){return a.depth-b.depth;}).forEach(function(n){if(n._oldHidden&&!n.hidden&&n.parent)newly.push(n);});
+      triggerAppear(newly,performance.now());
+      nodes.forEach(applyVisual);
+      edges.forEach(function(e){e.el.classList.remove("redhot");e.el.classList.remove("hot");});
+      // Agganciato (zoomato) mostro i nomi per intero, solo spostati per non toccarsi;
+      // negli altri contesti (inquadratura che tiene tutto) accorcio coi puntini.
+      (ctxMode()==="docked"?resolveNudge:resolveTruncate)(null);
+      cam.box=bbox(function(n){return !n.hidden;},true);cam.mode="search";
+    }
+    function highlightInFull(H){
+      nodes.forEach(function(n){n.redOutline=false;});
+      for(var qq=H;qq&&qq!==home;qq=qq.parent)qq.redOutline=true;
+      nodes.forEach(applyVisual);
+      edges.forEach(function(e){e.el.classList.remove("redhot");});
+      for(var p=H;p&&p.parent;p=p.parent){if(p.inEdge)p.inEdge.el.classList.add("redhot");}
+      (ctxMode()==="docked"?resolveNudge:resolveTruncate)(H);
+    }
+
+    function qval(){var q=ui.getElementById("vq");return q?q.value.trim():"";}
+    nodes.forEach(function(n){
+      n.el.addEventListener("mouseenter",function(){
+        if(qval())return;
+        if(n===home){hoveredNode=null;applyFocus(null);if(_full){clearRed();resolveTruncate(null);setStatus("schema completo · posati su un nodo");}else{setLayout(null);setStatus("click su un nodo per aprirlo");}return;}
+        hoveredNode=n;
+        if(_full){highlightInFull(n);}else{setLayout(n,true);}
+        applyFocus(n);
+        setStatus("click per aprire: "+cleanUrl(n.url));
+      });
+      n.el.addEventListener("mouseleave",function(){if(hoveredNode===n)hoveredNode=null;});
+      n.el.addEventListener("click",function(){if(n.hidden)return;if(n.url&&n.url!=="#")(cfg.onNavigate?cfg.onNavigate(n.url):window.open(n.url,"_blank","noopener"));});
+    });
+
+    function search(raw){
+      var q=(raw||"").trim().toLowerCase();
+      clearMatches();hoveredNode=null;applyFocus(null);
+      if(!q){if(_full){openAll();setStatus("schema completo · posati su un nodo");}else{setLayout(null);setStatus("click su un nodo per aprirlo");}return;}
+      var matches=nodes.filter(function(n){return (n.fullLabel||n.label).toLowerCase().indexOf(q)>-1;});
+      if(matches.length===0){setLayout(null);setStatus("nessun risultato per «"+raw.trim()+"»");return;}
+      matches.forEach(function(n){var i=n.label.toLowerCase().indexOf(q);n._match=i<0?null:{start:i,len:q.length};});
+      searchLayout(matches);
+      var word=matches.length===1?"risultato":"risultati";
+      setStatus(matches.length+" "+word+" · click per aprire");
+    }
+    ui.getElementById("vq").addEventListener("input",function(){search(this.value);});
+    ui.getElementById("vtri").addEventListener("click",function(){
+      if(_full){_full=false;applyFocus(null);setLayout(null);setStatus("click su un nodo per aprirlo");this.classList.remove("on");}
+      else{openAll();setStatus("schema completo · posati su un nodo");this.classList.add("on");}
+    });
+
+    // Il quadrato apre una vista affiancata: un sito campione a sinistra e, a
+    // destra, questa stessa mappa in una colonna più stretta e più alta (una vera
+    // "finestra divisa" del sistema operativo non è qualcosa che una pagina web
+    // possa comandare per motivi di sicurezza del browser, quindi l'effetto è
+    // ricreato con due riquadri dentro un'unica finestra nuova, che è l'equivalente
+    // pratico più vicino). openSplitView vive dentro boot proprio per poter essere
+    // rigenerata via boot.toString() e rieseguita nel documento della finestra
+    // aperta, con cfg diverso: stessa logica, misure diverse.
+    function openSplitView(){
+      // Nell'estensione la vista affiancata vive in una pagina dedicata
+      // (split.html), non piu' costruita con document.write: quel pattern e'
+      // vietato dalla CSP delle estensioni MV3. La pagina esterna carica lo
+      // stesso engine.js e ricostruisce l'albero dal sitemap del sito.
+      if (typeof cfg.onOpenSplit === "function") { cfg.onOpenSplit(); return; }
+      setStatus("vista affiancata non disponibile in questo contesto");
+    }
+    var vfullBtn=ui.getElementById("vfull");
+    if(vfullBtn){vfullBtn.addEventListener("click",function(){openSplitView();});}
+
+    // Il quadrato nella finestra affiancata: fa "staccare" la mappa in un riquadro
+    // mobile appoggiato SOPRA il sito (come nel mockup) e, ripremuto, la riaggancia
+    // di fianco. Esiste solo nella finestra affiancata (nella vista principale al
+    // suo posto c'è vfull, che invece apre la finestra affiancata), quindi qui
+    // controlliamo prima che il pulsante e lo split ci siano davvero.
+    var vfloatBtn=ui.getElementById("vfloat");
+    if(vfloatBtn){vfloatBtn.addEventListener("click",function(){
+      var wrap=ui.querySelector(".splitwrap");if(!wrap)return;
+      var floating=wrap.classList.toggle("floating");
+      vfloatBtn.classList.toggle("on",floating);
+      vfloatBtn.setAttribute("title",floating?"riaggancia la mappa di fianco":"finestra a parte sopra il sito");
+      // Staccando la finestra diventa QUADRATA: la forma del riquadro mappa cambia,
+      // quindi rimisuro e riadatto il viewBox al nuovo rapporto (e lo ripristino
+      // portrait quando si riaggancia). Deferito a rAF così misuro a layout applicato.
+      hoveredNode=null;applyFocus(null);
+      setStatus(_full?"schema completo · posati su un nodo":"click su un nodo per aprirlo");
+      requestAnimationFrame(shapeFit);
+    });}
+
+    var cl=ui.getElementById("vclose");
+    if(cl)cl.addEventListener("click",function(){
+      if(cfg.onClose){cfg.onClose();return;}
+      if(cfg.closeAction==="window"){window.close();return;}
+      var p=ui.getElementById("vpanel");if(p)p.style.opacity="0";
+    });
+
+    cam.s=1;cam.px=0;cam.py=0;cam.ts=1;cam.tpx=0;cam.tpy=0;cam.mode="idle";cam.box=null;
+    setLayout(null);
+    // In quale delle tre incarnazioni stiamo girando in questo istante?
+    //  - "native"  : mappa principale a tutta larghezza, OPPURE finestra staccata
+    //  - "docked"  : mappa agganciata di fianco al sito nella vista affiancata
+    // È un controllo a runtime perché il quadrato può staccare/riagganciare la
+    // finestra in qualsiasi momento (docked <-> native) senza rilanciare boot.
+    function ctxMode(){
+      var w=ui.querySelector(".splitwrap");
+      if(!w)return "native";
+      return w.classList.contains("floating")?"native":"docked";
+    }
+    // Adatta la geometria della mappa al riquadro corrente: da STACCATA il riquadro è
+    // quadrato, quindi porto il viewBox alle sue dimensioni reali in pixel (niente bande
+    // vuote, disegno centrato e riempito); da agganciata ripristino il formato originale.
+    function shapeFit(){
+      var w=ui.querySelector(".splitwrap");
+      var floating=w&&w.classList.contains("floating");
+      if(floating){
+        var r=svg.getBoundingClientRect();var W=Math.round(r.width),H=Math.round(r.height);
+        if(W>80&&H>80){CX=W/2;CY=H/2;VW=W-40;VH=H-40;svg.setAttribute("viewBox","0 0 "+W+" "+H);}
+      }else{
+        CX=cfg.CX;CY=cfg.CY;VW=2*CX-40;VH=2*CY-40;svg.setAttribute("viewBox","0 0 "+(2*CX)+" "+(2*CY));
+      }
+      home.tx=CX;home.ty=CY;
+      if(_full)openAll();else if(hoveredNode&&hoveredNode!==home)setLayout(hoveredNode,true);else setLayout(null);
+    }
+    var cameraBounds=null;
+    var originalFinishLabels=finishLabels;
+    finishLabels=function(vis){originalFinishLabels(vis);cameraBounds=bbox(function(n){return !n.hidden;},true);};
+    cameraBounds=bbox(function(n){return !n.hidden;},true);
+    var zoom=1,pointer={x:0.5,y:0.5};
+    svg.addEventListener('pointermove',function(e){
+      var r=svg.getBoundingClientRect();
+      pointer.x=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+      pointer.y=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
+    });
+    ui.getElementById('zoomin')?.addEventListener('click',function(){zoom=Math.min(6,zoom*1.25);});
+    ui.getElementById('zoomout')?.addEventListener('click',function(){zoom=Math.max(1,zoom/1.25);});
+    ui.getElementById('vtri').addEventListener('click',function(){zoom=1;});
+    function frame(now){
+      if(!svg.isConnected)return;
+      var r=svg.getBoundingClientRect();
+      var ratio=r.width/Math.max(1,r.height),viewH=560,viewW=viewH*ratio;
+      svg.setAttribute('viewBox','0 0 '+viewW+' '+viewH);
+      var b=cameraBounds;
+      if(b){
+        var bw=Math.max(1,b.maxX-b.minX+32),bh=Math.max(1,b.maxY-b.minY+32);
+        var fit=Math.min((viewW-24)/bw,(viewH-24)/bh,1);
+        cam.ts=fit*zoom;
+        var overflowX=Math.max(0,bw*cam.ts-(viewW-24));
+        var overflowY=Math.max(0,bh*cam.ts-(viewH-24));
+        cam.tpx=viewW/2-cam.ts*(b.minX+b.maxX)/2-(pointer.x-.5)*overflowX;
+        cam.tpy=viewH/2-cam.ts*(b.minY+b.maxY)/2-(pointer.y-.5)*overflowY;
+      }
+      cam.s+=(cam.ts-cam.s)*0.05;cam.px+=(cam.tpx-cam.px)*0.05;cam.py+=(cam.tpy-cam.py)*0.05;
+      cam.setAttribute("transform","translate("+cam.px.toFixed(2)+","+cam.py.toFixed(2)+") scale("+cam.s.toFixed(4)+")");
+      for(var i=0;i<nodes.length;i++){var n=nodes[i];
+        var tw=(n===hoveredNode)?0.2:1; n.wob+=(tw-n.wob)*0.08;
+        if(!reduce){n.ox=amp*n.wob*Math.sin(now*0.00052+n.p1);n.oy=amp*n.wob*Math.cos(now*0.0007+n.p2);}else{n.ox=0;n.oy=0;}
+        if(n.appearing){
+          var elp=now-n.appearStart;
+          if(elp<0){n.bx=n.parent.bx;n.by=n.parent.by;n.rcur=0;n._pr=-1;}
+          else{var pr=Math.min(1,elp/950);n._pr=pr;var lp=easeOutCubic(Math.min(1,pr/0.55));var dp=Math.max(0,Math.min(1,(pr-0.5)/0.5));var pbx=n.parent.bx,pby=n.parent.by;n.bx=pbx+(n.tx-pbx)*lp;n.by=pby+(n.ty-pby)*lp;n.rcur=RAD*easeOutBack(dp);if(pr>=1){n.appearing=false;n.bx=n.tx;n.by=n.ty;n.rcur=RAD;}}
+        } else {n._pr=1;n.bx+=(n.tx-n.bx)*0.05;n.by+=(n.ty-n.by)*0.05;var rt=n.hidden?0:RAD;n.rcur+=(rt-n.rcur)*0.10;}
+        n._dx=n.bx+n.ox;n._dy=n.by+n.oy;
+        n.el.setAttribute("r",Math.max(0,n.rcur).toFixed(2));
+        n.el.setAttribute("cx",n._dx.toFixed(2));n.el.setAttribute("cy",n._dy.toFixed(2));
+        var disp=n._disp||n.label;
+        if(n._curText!==disp){n.lbl.textContent=disp;n._curText=disp;n.lblW=null;}
+        var lx,ly,anc,shift=n._lyShift||0;
+        if(n._labelPos){lx=n._labelPos.x;ly=n._labelPos.y;anc=n._labelPos.anchor;}
+        else if(n===home){lx=n.tx;ly=n.ty-RAD-14;anc="middle";}
+        else{var ux=n.tx-CX,uy=n.ty-CY,L=Math.hypot(ux,uy)||1;lx=n.tx+ux/L*LOFF;ly=n.ty+uy/L*LOFF+shift;anc=(ux>4?"start":(ux<-4?"end":"middle"));}
+        n.lbl.setAttribute("x",lx.toFixed(2));n.lbl.setAttribute("y",ly.toFixed(2));n.lbl.setAttribute("text-anchor",anc);
+        if(!n.hidden&&n.lblW==null){try{n.lblW=n.lbl.getComputedTextLength();}catch(e){}}
+        var labelVisible = !n.hidden && !(n.appearing && n._pr<0.72) && !n._lhidden;
+        var loT=labelVisible?1:0;
+        n._lo += (loT-n._lo)*0.18; n.lbl.style.opacity=n._lo.toFixed(3);
+        var hw=n.lblW||(disp.length*6);
+        var hrx=Math.max(8,hw/2+(n._focus?16:10)), hry=(n._focus?13.5:11.5);
+        var hcx=anc==="start"?lx+hw/2:(anc==="end"?lx-hw/2:lx);
+        n.halo.setAttribute("cx",hcx.toFixed(2));n.halo.setAttribute("cy",ly.toFixed(2));
+        n.halo.setAttribute("rx",hrx.toFixed(2));n.halo.setAttribute("ry",hry);
+        n._ho += (loT-n._ho)*0.18; n.halo.setAttribute("opacity",n._ho.toFixed(3));
+        var uWant=0,ty=ly+8,tx1,tx2;
+        if(labelVisible){
+          if(n===hoveredNode && n.lblW!=null){
+            uWant=1;
+            if(anc==="middle"){tx1=lx-n.lblW/2;tx2=lx+n.lblW/2;}
+            else if(anc==="end"){tx1=lx-n.lblW;tx2=lx;}
+            else{tx1=lx;tx2=lx+n.lblW;}
+          } else if(n._match){
+            try{var sp=n.lbl.getStartPositionOfChar(n._match.start);var w=n.lbl.getSubStringLength(n._match.start,n._match.len);tx1=sp.x;tx2=sp.x+w;uWant=1;}catch(e){uWant=0;}
+          }
+        }
+        if(uWant){
+          if(n._ulo<0.05){n._ux1=tx1;n._ux2=tx1;n._uy=ty;}
+          n._ux1+=(tx1-n._ux1)*0.45;n._ux2+=(tx2-n._ux2)*0.45;n._uy+=(ty-n._uy)*0.45;
+        } else {n._ux2+=(n._ux1-n._ux2)*0.45;}
+        n.ul.setAttribute("x1",n._ux1.toFixed(2));n.ul.setAttribute("x2",n._ux2.toFixed(2));
+        n.ul.setAttribute("y1",n._uy.toFixed(2));n.ul.setAttribute("y2",n._uy.toFixed(2));
+        n._ulo += ((uWant?1:0)-n._ulo)*0.22; n.ul.setAttribute("opacity",n._ulo.toFixed(3));
+      }
+      for(var e=0;e<edges.length;e++){var ed=edges[e];
+        var fx=ed.from._dx,fy=ed.from._dy,ex=ed.to._dx,ey=ed.to._dy;
+        var ddx=ex-fx,ddy=ey-fy,LL=Math.hypot(ddx,ddy)||1,ux=ddx/LL,uy=ddy/LL;
+        var rf=Math.max(0,ed.from.rcur)+GAP,rt2=Math.max(0,ed.to.rcur)+GAP;
+        if(rf+rt2>=LL){ed.el.setAttribute("x1",fx);ed.el.setAttribute("y1",fy);ed.el.setAttribute("x2",fx);ed.el.setAttribute("y2",fy);}
+        else{ed.el.setAttribute("x1",(fx+ux*rf).toFixed(2));ed.el.setAttribute("y1",(fy+uy*rf).toFixed(2));ed.el.setAttribute("x2",(ex-ux*rt2).toFixed(2));ed.el.setAttribute("y2",(ey-uy*rt2).toFixed(2));}}
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  window.WebNode = window.WebNode || {};
+  window.WebNode.boot = boot;
+})();

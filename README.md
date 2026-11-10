@@ -2,15 +2,17 @@
 
 Un navigatore per orientarsi nei siti web, di Lorenzo Casetta.
 
-## Web Node 3.0 — estensione
+## Web Node 4 — versione corrente 4.1.5
 
-[Scarica Web Node 3.0](downloads/Web_Node_V3.zip) · [Sorgenti e installazione](extension-v3/README.md)
+[Scarica Web Node 4.1.5](downloads/Web_Node_V4_1_5.zip) · [Installazione e comandi](extension-v4/README.md) · [Revisione e limiti noti](extension-v4/REVISIONE.md)
 
-Versione approvata per interazioni, zoom, camera al puntatore e riorganizzazione dei collegamenti. **Problema noto: lo split non funziona nel collaudo su Arc**, con errore di connessione al componente ricevente. La correzione prosegue nella V4, non ancora definitiva.
+Mappa dei collegamenti della pagina corrente, finestra spostabile e ridimensionabile, divisione della pagina, zoom e apertura dei collegamenti con un clic. La revisione 4.1.5 corregge difetti di navigazione e ripristino verificati con test simulati. La compatibilità con ogni sito e browser non è garantita; consultare i limiti noti prima del collaudo.
 
-## Prototipo web V2
+## Versioni precedenti
 
-[Apri il prototipo INPS](https://lorenzocasetta.github.io/design_ostativo/). Contiene l’albero INPS del prototipo; l’estensione V3 legge i collegamenti della pagina attiva.
+[Web Node 3.0](extension-v3/README.md) · [Pacchetto V3](downloads/Web_Node_V3.zip)
+
+[Apri il prototipo web V2 INPS](https://lorenzocasetta.github.io/design_ostativo/). Il prototipo contiene l’albero INPS; l’estensione legge i collegamenti della pagina attiva.
 
 ## Ricerca
 
