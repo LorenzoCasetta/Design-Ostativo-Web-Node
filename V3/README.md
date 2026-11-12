@@ -14,5 +14,5 @@ Lo split attivato dal quadrato NON funziona nel collaudo su Arc: errore «Could 
 ## Limiti e privacy
 La mappa rappresenta i link interni raccolti dalla pagina corrente, non tutto il sito. Priorità ai menu, prefissi linguistici rimossi, gerarchia per percorsi URL. Massimo 1200 link raccolti e 260 nodi disegnati; varianti query possono essere accorpate. Iframe e shadow root chiusi non sono analizzati.
 Nessun invio a server esterni. Permessi activeTab e scripting per leggere la scheda autorizzata; storage per lo stato di sessione dello split.
-Prototipo INPS V2: https://lorenzocasetta.github.io/design_ostativo/
+Prototipo INPS V2: https://lorenzocasetta.github.io/design_ostativo/V2/
 Tesi: https://doi.org/10.5281/zenodo.21515611
