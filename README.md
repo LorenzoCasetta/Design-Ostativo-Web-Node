@@ -31,7 +31,7 @@ Web Node disegna la struttura di un sito come una mappa a nodi navigabile: ogni 
 
 La compatibilità con ogni sito web non è garantita. La mappa rappresenta i collegamenti rilevati nella pagina corrente, non una scansione completa del sito.
 
-Web Node non raccoglie dati di alcun genere: i collegamenti sono elaborati nel browser e nulla viene inviato a server esterni.
+Web Node non raccoglie dati di alcun genere: i collegamenti sono elaborati nel browser e nulla viene inviato a server esterni. Dettagli nell’[informativa sulla privacy](https://lorenzocasetta.github.io/design_ostativo/privacy.html).
 
 ## Sviluppi previsti
 

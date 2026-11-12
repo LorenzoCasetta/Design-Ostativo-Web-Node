@@ -34,7 +34,7 @@ Se è già installata una copia precedente, rimuoverla prima di caricare questa.
 
 ## Privacy
 
-L’estensione usa i permessi `activeTab`, `scripting` e `storage`. I collegamenti sono elaborati nel browser, che conserva solo lo stato necessario alla navigazione. Nessun dato viene inviato a server esterni.
+L’estensione usa i permessi `activeTab`, `scripting` e `storage`. I collegamenti sono elaborati nel browser, che conserva solo lo stato necessario alla navigazione. Nessun dato viene inviato a server esterni. Dettagli nell’[informativa sulla privacy](https://lorenzocasetta.github.io/design_ostativo/privacy.html).
 
 ## Compatibilità e limiti noti
 
