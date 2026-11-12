@@ -1,12 +1,12 @@
-/* Web Node — motore di visualizzazione (ricavato dal tuo Web_Node.html).
-   Logica di layout/animazione: la tua, invariata. Modifiche minime:
-   - l'albero arriva da cfg.tree (costruito dal sitemap del sito), non piu' cablato;
-   - niente document.write per la vista affiancata (vietato dalla CSP MV3):
+/* Web Node — motore di visualizzazione.
+   - l'albero arriva da cfg.tree;
+   - la vista affiancata non usa document.write (vietato dalla CSP MV3):
      il pulsante quadrato chiama cfg.onOpenSplit();
-   - boot NON viene auto-invocato: e' esposto come window.WebNode.boot. */
+   - boot non viene auto-invocato: e' esposto come window.WebNode.boot. */
 (function(){
   "use strict";
 function boot(cfg){
+    var ui=cfg.root||document;
     var NS="http://www.w3.org/2000/svg";
     var E=function(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;};
     var CX=cfg.CX, CY=cfg.CY, RAD=cfg.RAD, GAP=cfg.GAP, DEG=Math.PI/180, amp=cfg.amp, STAGGER=cfg.STAGGER, LOFF=cfg.LOFF;
@@ -16,10 +16,10 @@ function boot(cfg){
     function easeOutBack(t){var c1=1.2,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);}
     var _lmode="search", _full=false, _focusNode=null;
     function depthRadius(d){
-      // I raggi erano numeri fissi pensati per il riquadro largo 760x560. Nella
-      // vista affiancata il riquadro è più stretto, quindi li scalo in base a
-      // quanto è piccola la dimensione che stringe di più (di solito la larghezza),
-      // usando come riferimento il caso originale (280 = metà dei 560 di altezza).
+      // I raggi sono definiti per il riquadro largo 760x560. Nella vista affiancata
+      // il riquadro è più stretto, quindi vengono scalati sulla dimensione più
+      // vincolante (di solito la larghezza), usando come riferimento il caso
+      // originale (280 = metà dei 560 di altezza).
       var k = Math.min(CX,CY)/280;
       if(d<=1)return 116*k;
       if(_lmode==="hover"){if(d===2)return 200*k;return (300+(d-3)*100)*k;}
@@ -30,7 +30,7 @@ function boot(cfg){
     function norm(n){ n.children=(n.children||[]).map(function(c){return norm(c);}); return n; }
     norm(tree);
 
-    var svg=document.getElementById("vmap");
+    var svg=ui.getElementById("vmap");
     svg.setAttribute("viewBox","0 0 "+(2*CX)+" "+(2*CY)); // ridondante sulla pagina principale, ma tiene sincronizzata la finestra affiancata senza dover copiare i numeri a mano nel markup
     var defs=E("defs",{});
     defs.innerHTML='<radialGradient id="vhalo" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#1b1a19" stop-opacity="1"/><stop offset="60%" stop-color="#1b1a19" stop-opacity="1"/><stop offset="100%" stop-color="#1b1a19" stop-opacity="0"/></radialGradient><radialGradient id="vglow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#2d1513" stop-opacity="1"/><stop offset="58%" stop-color="#241312" stop-opacity="0.97"/><stop offset="100%" stop-color="#1b1a19" stop-opacity="0"/></radialGradient>';
@@ -48,6 +48,7 @@ function boot(cfg){
       node.fill=depth===0?"filled":"outline";node.dim=false;node.bright=false;node.redOutline=false;node._match=null;
       node._disp=node.label;node._curText=node.label;node._lyShift=0;node._lhidden=false;node._focus=false;
       node.el=E("circle",{class:"dot "+node.fill+(depth>=2?" hid":""),r:node.rcur,cx:CX,cy:CY});
+      var tooltip=E("title",{});tooltip.textContent=node.fullLabel||node.label;node.el.appendChild(tooltip);
       node.halo=E("ellipse",{fill:"url(#vhalo)",rx:0,ry:11.5,cx:CX,cy:CY,opacity:0,"pointer-events":"none"});
       node.lbl=E("text",{class:"nlbl",x:CX,y:CY,"text-anchor":"middle","dominant-baseline":"central"});
       node.lbl.style.opacity=node._lo; node.lbl.textContent=node.label;
@@ -63,7 +64,15 @@ function boot(cfg){
     function leafCount(n,inc){var k=n.children.filter(inc);if(!k.length)return 1;var s=0;for(var i=0;i<k.length;i++)s+=leafCount(k[i],inc);return s;}
     function layoutNode(node,a0,a1,inc){
       node._ang=(a0+a1)/2;
-      if(node.depth>=1){var R=depthRadius(node.depth)+(node._rOff||0);node.tx=CX+R*Math.cos(node._ang);node.ty=CY+R*Math.sin(node._ang);}
+      if(_lmode==="hover"&&node.depth>=2){
+        // Grow from the parent, not from the central circle: every branch
+        // advances outward and its middle extends farther than its edges.
+        var scale=Math.min(CX,CY)/280;
+        var delta=node._ang-node.parent._ang;
+        var reach=(145+Math.min(3,node.depth-2)*16)*scale*(1+0.22*Math.cos(delta));
+        node.tx=node.parent.tx+reach*Math.cos(node._ang);
+        node.ty=node.parent.ty+reach*Math.sin(node._ang);
+      }else if(node.depth>=1){var R=depthRadius(node.depth)+(node._rOff||0);node.tx=CX+R*Math.cos(node._ang);node.ty=CY+R*Math.sin(node._ang);}
       var kids=node.children.filter(inc);
       if(!kids.length)return;
       var tot=0,lc=[];for(var i=0;i<kids.length;i++){lc[i]=leafCount(kids[i],inc);tot+=lc[i];}
@@ -88,7 +97,7 @@ function boot(cfg){
       n.lbl.textContent=text; var w; try{w=n.lbl.getComputedTextLength();}catch(e){w=text.length*6;}
       var lx,ly,anc;
       if(n._labelPos){lx=n._labelPos.x;ly=n._labelPos.y;anc=n._labelPos.anchor;}
-      else if(n===home){lx=n.tx;ly=n.ty+RAD+14+(shift||0);anc="middle";}
+      else if(n===home){lx=n.tx;ly=n.ty-RAD-14;anc="middle";}
       else{var ux=n.tx-CX,uy=n.ty-CY,L=Math.hypot(ux,uy)||1;lx=n.tx+ux/L*LOFF;ly=n.ty+uy/L*LOFF+(shift||0);anc=(ux>4?"start":(ux<-4?"end":"middle"));}
       var x0=anc==="start"?lx:(anc==="end"?lx-w:lx-w/2);
       return {x0:x0,x1:x0+w,y0:ly-7,y1:ly+7,w:w};
@@ -100,10 +109,11 @@ function boot(cfg){
     function resolveNudge(pri){
       resetLabels();
       var vis=nodes.filter(function(n){return !n.hidden;});
-      vis.sort(prioritySort(pri));
+      vis.sort(function(a,b){return a===home?-1:b===home?1:prioritySort(pri)(a,b);});
       var boxes=vis.map(function(n){return {x0:n.tx-RAD-4,x1:n.tx+RAD+4,y0:n.ty-RAD-4,y1:n.ty+RAD+4};});
       vis.forEach(function(n){
         var w=n.lbl.getComputedTextLength(), chosen=null, g;
+        if(n===home){n._labelPos={x:n.tx,y:n.ty-RAD-14,anchor:"middle"};boxes.push({x0:n.tx-w/2,x1:n.tx+w/2,y0:n.ty-RAD-21,y1:n.ty-RAD-7});return;}
         var outward=n.tx>=CX?1:-1;
         // Try all directions near the circle before increasing the distance.
         for(var gap=6;gap<2000&&!chosen;gap+=5){
@@ -133,7 +143,7 @@ function boot(cfg){
     }
     function resolveTruncate(pri){resolveNudge(pri);}
 
-    var statusSpan=document.querySelector("#vstatus span");
+    var statusSpan=ui.querySelector("#vstatus span");
     function setStatus(txt){statusSpan.textContent=txt;}
     function cleanUrl(u){u=(u||'').replace(/^https?:\/\//,'');if(u.length>62)u=u.slice(0,59)+'…';return u;}
     function applyVisual(n){
@@ -153,12 +163,11 @@ function boot(cfg){
       if(!n||n===home)return;
       n.halo.setAttribute("fill","url(#vglow)");
       focusLayer.appendChild(n.halo);focusLayer.appendChild(n.lbl);focusLayer.appendChild(n.ul);
-      // n.el (il pallino) di proposito NON viene più spostato qui. Portarlo avanti
-      // e indietro fra i gruppi mentre il mouse ci stava sopra gli faceva perdere
-      // per un frame lo stato :hover del CSS (o interrompeva la transizione dello
-      // scale), ed era quello lo sfarfallio sul nodo appena lasciato segnalato in
-      // fase di test. L'alone e l'etichetta sopra a tutto bastano per leggerla bene,
-      // il pallino può restare nel suo layer normale.
+      // n.el (il pallino) di proposito NON viene spostato qui. Portarlo avanti e
+      // indietro fra i gruppi mentre il mouse è sopra gli fa perdere per un frame
+      // lo stato :hover del CSS (o interrompe la transizione dello scale), con uno
+      // sfarfallio sul nodo appena lasciato. L'alone e l'etichetta in primo piano
+      // bastano per la leggibilità: il pallino resta nel suo layer normale.
       n._focus=true;
     }
     function clearFocus(n){
@@ -185,7 +194,7 @@ function boot(cfg){
       sections.forEach(function(s){var R=depthRadius(1);s.tx=CX+R*Math.cos(s.angle0);s.ty=CY+R*Math.sin(s.angle0);s._ang=s.angle0;});
       if(section){
         var lc=leafCount(section,function(n){return n._vis;});
-        var wdeg=Math.max(58,Math.min(150,lc*13));
+        var wdeg=Math.max(58,Math.min(155,lc*13));
         var W=wdeg*DEG;
         layoutNode(section, section.angle0-W/2, section.angle0+W/2, function(n){return n._vis;});
         sections.forEach(function(s){if(s!==section)s.dim=true;});
@@ -237,10 +246,9 @@ function boot(cfg){
       nodes.forEach(function(n){n.bright=false;n.dim=false;n.redOutline=false;n.fill=(n===home?"filled":"outline");n._rOff=0;n.hidden=false;});
       home.tx=CX;home.ty=CY;home._ang=0;
       var inc=function(){return true;};
-      // il gap fra le sezioni era 6°: portato a 9° (uguale a quello della ricerca)
-      // per dare un po' più di respiro fra un ramo e l'altro prima ancora che
-      // entri in gioco resolveTruncate — meno affollamento a monte, meno lavoro
-      // da fare a valle per separare le etichette.
+      // Gap di 9° fra le sezioni (uguale a quello della ricerca): dà più respiro
+      // fra un ramo e l'altro prima ancora che entri in gioco resolveTruncate —
+      // meno affollamento a monte, meno lavoro a valle per separare le etichette.
       var ns=sections.length, gap=9*DEG, usable=2*Math.PI-gap*ns;
       var tot=0,lc=[];sections.forEach(function(s,i){lc[i]=leafCount(s,inc);tot+=lc[i];});if(!tot)tot=ns;
       var a=-Math.PI/2;
@@ -263,34 +271,34 @@ function boot(cfg){
       (ctxMode()==="docked"?resolveNudge:resolveTruncate)(H);
     }
 
-    function qval(){var q=document.getElementById("vq");return q?q.value.trim():"";}
+    function qval(){var q=ui.getElementById("vq");return q?q.value.trim():"";}
     nodes.forEach(function(n){
       n.el.addEventListener("mouseenter",function(){
         if(qval())return;
-        if(n===home){hoveredNode=null;applyFocus(null);if(_full){clearRed();resolveTruncate(null);setStatus("schema completo · posati su un nodo");}else{setLayout(null);setStatus("doppio click su un nodo per aprirlo");}return;}
+        if(n===home){hoveredNode=null;applyFocus(null);if(_full){clearRed();resolveTruncate(null);setStatus("schema completo · posati su un nodo");}else{setLayout(null);setStatus("click su un nodo per aprirlo");}return;}
         hoveredNode=n;
         if(_full){highlightInFull(n);}else{setLayout(n,true);}
         applyFocus(n);
-        setStatus("doppio click per aprire: "+cleanUrl(n.url));
+        setStatus("click per aprire: "+cleanUrl(n.url));
       });
       n.el.addEventListener("mouseleave",function(){if(hoveredNode===n)hoveredNode=null;});
-      n.el.addEventListener("dblclick",function(){if(n.hidden)return;if(n.url&&n.url!=="#")(cfg.onNavigate?cfg.onNavigate(n.url):window.open(n.url,"_blank","noopener"));});
+      n.el.addEventListener("click",function(){if(n.hidden)return;if(n.url&&n.url!=="#")(cfg.onNavigate?cfg.onNavigate(n.url):window.open(n.url,"_blank","noopener"));});
     });
 
     function search(raw){
       var q=(raw||"").trim().toLowerCase();
       clearMatches();hoveredNode=null;applyFocus(null);
-      if(!q){if(_full){openAll();setStatus("schema completo · posati su un nodo");}else{setLayout(null);setStatus("doppio click su un nodo per aprirlo");}return;}
-      var matches=nodes.filter(function(n){return n.label.toLowerCase().indexOf(q)>-1;});
+      if(!q){if(_full){openAll();setStatus("schema completo · posati su un nodo");}else{setLayout(null);setStatus("click su un nodo per aprirlo");}return;}
+      var matches=nodes.filter(function(n){return (n.fullLabel||n.label).toLowerCase().indexOf(q)>-1;});
       if(matches.length===0){setLayout(null);setStatus("nessun risultato per «"+raw.trim()+"»");return;}
-      matches.forEach(function(n){n._match={start:n.label.toLowerCase().indexOf(q),len:q.length};});
+      matches.forEach(function(n){var i=n.label.toLowerCase().indexOf(q);n._match=i<0?null:{start:i,len:q.length};});
       searchLayout(matches);
       var word=matches.length===1?"risultato":"risultati";
-      setStatus(matches.length+" "+word+" · doppio click per aprire");
+      setStatus(matches.length+" "+word+" · click per aprire");
     }
-    document.getElementById("vq").addEventListener("input",function(){search(this.value);});
-    document.getElementById("vtri").addEventListener("click",function(){
-      if(_full){_full=false;applyFocus(null);setLayout(null);setStatus("doppio click su un nodo per aprirlo");this.classList.remove("on");}
+    ui.getElementById("vq").addEventListener("input",function(){search(this.value);});
+    ui.getElementById("vtri").addEventListener("click",function(){
+      if(_full){_full=false;applyFocus(null);setLayout(null);setStatus("click su un nodo per aprirlo");this.classList.remove("on");}
       else{openAll();setStatus("schema completo · posati su un nodo");this.classList.add("on");}
     });
 
@@ -304,23 +312,23 @@ function boot(cfg){
     // aperta, con cfg diverso: stessa logica, misure diverse.
     function openSplitView(){
       // Nell'estensione la vista affiancata vive in una pagina dedicata
-      // (split.html), non piu' costruita con document.write: quel pattern e'
+      // (split.html) e non viene costruita con document.write: quel pattern e'
       // vietato dalla CSP delle estensioni MV3. La pagina esterna carica lo
       // stesso engine.js e ricostruisce l'albero dal sitemap del sito.
       if (typeof cfg.onOpenSplit === "function") { cfg.onOpenSplit(); return; }
       setStatus("vista affiancata non disponibile in questo contesto");
     }
-    var vfullBtn=document.getElementById("vfull");
+    var vfullBtn=ui.getElementById("vfull");
     if(vfullBtn){vfullBtn.addEventListener("click",function(){openSplitView();});}
 
     // Il quadrato nella finestra affiancata: fa "staccare" la mappa in un riquadro
-    // mobile appoggiato SOPRA il sito (come nel mockup) e, ripremuto, la riaggancia
-    // di fianco. Esiste solo nella finestra affiancata (nella vista principale al
-    // suo posto c'è vfull, che invece apre la finestra affiancata), quindi qui
-    // controlliamo prima che il pulsante e lo split ci siano davvero.
-    var vfloatBtn=document.getElementById("vfloat");
+    // mobile appoggiato SOPRA il sito e, ripremuto, la riaggancia di fianco.
+    // Esiste solo nella finestra affiancata (nella vista principale al suo posto
+    // c'è vfull, che invece apre la finestra affiancata), quindi qui si controlla
+    // prima che il pulsante e lo split ci siano davvero.
+    var vfloatBtn=ui.getElementById("vfloat");
     if(vfloatBtn){vfloatBtn.addEventListener("click",function(){
-      var wrap=document.querySelector(".splitwrap");if(!wrap)return;
+      var wrap=ui.querySelector(".splitwrap");if(!wrap)return;
       var floating=wrap.classList.toggle("floating");
       vfloatBtn.classList.toggle("on",floating);
       vfloatBtn.setAttribute("title",floating?"riaggancia la mappa di fianco":"finestra a parte sopra il sito");
@@ -328,15 +336,15 @@ function boot(cfg){
       // quindi rimisuro e riadatto il viewBox al nuovo rapporto (e lo ripristino
       // portrait quando si riaggancia). Deferito a rAF così misuro a layout applicato.
       hoveredNode=null;applyFocus(null);
-      setStatus(_full?"schema completo · posati su un nodo":"doppio click su un nodo per aprirlo");
+      setStatus(_full?"schema completo · posati su un nodo":"click su un nodo per aprirlo");
       requestAnimationFrame(shapeFit);
     });}
 
-    var cl=document.getElementById("vclose");
+    var cl=ui.getElementById("vclose");
     if(cl)cl.addEventListener("click",function(){
       if(cfg.onClose){cfg.onClose();return;}
       if(cfg.closeAction==="window"){window.close();return;}
-      var p=document.getElementById("vpanel");if(p)p.style.opacity="0";
+      var p=ui.getElementById("vpanel");if(p)p.style.opacity="0";
     });
 
     cam.s=1;cam.px=0;cam.py=0;cam.ts=1;cam.tpx=0;cam.tpy=0;cam.mode="idle";cam.box=null;
@@ -347,7 +355,7 @@ function boot(cfg){
     // È un controllo a runtime perché il quadrato può staccare/riagganciare la
     // finestra in qualsiasi momento (docked <-> native) senza rilanciare boot.
     function ctxMode(){
-      var w=document.querySelector(".splitwrap");
+      var w=ui.querySelector(".splitwrap");
       if(!w)return "native";
       return w.classList.contains("floating")?"native":"docked";
     }
@@ -355,7 +363,7 @@ function boot(cfg){
     // quadrato, quindi porto il viewBox alle sue dimensioni reali in pixel (niente bande
     // vuote, disegno centrato e riempito); da agganciata ripristino il formato originale.
     function shapeFit(){
-      var w=document.querySelector(".splitwrap");
+      var w=ui.querySelector(".splitwrap");
       var floating=w&&w.classList.contains("floating");
       if(floating){
         var r=svg.getBoundingClientRect();var W=Math.round(r.width),H=Math.round(r.height);
@@ -376,10 +384,11 @@ function boot(cfg){
       pointer.x=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
       pointer.y=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
     });
-    document.getElementById('zoomin')?.addEventListener('click',function(){zoom=Math.min(6,zoom*1.25);});
-    document.getElementById('zoomout')?.addEventListener('click',function(){zoom=Math.max(1,zoom/1.25);});
-    document.getElementById('vtri').addEventListener('click',function(){zoom=1;});
+    ui.getElementById('zoomin')?.addEventListener('click',function(){zoom=Math.min(6,zoom*1.25);});
+    ui.getElementById('zoomout')?.addEventListener('click',function(){zoom=Math.max(1,zoom/1.25);});
+    ui.getElementById('vtri').addEventListener('click',function(){zoom=1;});
     function frame(now){
+      if(!svg.isConnected)return;
       var r=svg.getBoundingClientRect();
       var ratio=r.width/Math.max(1,r.height),viewH=560,viewW=viewH*ratio;
       svg.setAttribute('viewBox','0 0 '+viewW+' '+viewH);
@@ -410,7 +419,7 @@ function boot(cfg){
         if(n._curText!==disp){n.lbl.textContent=disp;n._curText=disp;n.lblW=null;}
         var lx,ly,anc,shift=n._lyShift||0;
         if(n._labelPos){lx=n._labelPos.x;ly=n._labelPos.y;anc=n._labelPos.anchor;}
-        else if(n===home){lx=n.tx;ly=n.ty+RAD+14+shift;anc="middle";}
+        else if(n===home){lx=n.tx;ly=n.ty-RAD-14;anc="middle";}
         else{var ux=n.tx-CX,uy=n.ty-CY,L=Math.hypot(ux,uy)||1;lx=n.tx+ux/L*LOFF;ly=n.ty+uy/L*LOFF+shift;anc=(ux>4?"start":(ux<-4?"end":"middle"));}
         n.lbl.setAttribute("x",lx.toFixed(2));n.lbl.setAttribute("y",ly.toFixed(2));n.lbl.setAttribute("text-anchor",anc);
         if(!n.hidden&&n.lblW==null){try{n.lblW=n.lbl.getComputedTextLength();}catch(e){}}

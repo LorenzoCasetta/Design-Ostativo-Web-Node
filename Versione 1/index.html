@@ -48,16 +48,15 @@
 </div>
 <script>
 (function(){
-  // Tutta la logica vive dentro boot(cfg), invece che sparsa nell'IIFE come prima,
-  // perché il pulsante "quadrato" adesso deve aprire una seconda copia della mappa
-  // dentro una finestra separata (vedi openSplitView più sotto). Per non tenere due
-  // versioni del motore da mantenere allineate a mano, quella seconda copia viene
-  // generata al volo con boot.toString() e rieseguita nel documento della nuova
-  // finestra con misure diverse (più stretta e più alta). cfg porta solo i numeri
-  // che cambiano fra le due versioni: il resto del codice è identico in entrambe.
-  // Tutto quello che serve (compreso NS, che prima stava fuori dall'IIFE) deve
-  // vivere dentro boot: è il testo di boot stesso ad essere rispedito nella
-  // finestra nuova, quindi non può appoggiarsi a niente di esterno.
+  // Tutta la logica vive dentro boot(cfg): il pulsante "quadrato" apre una seconda
+  // copia della mappa in una finestra separata (vedi openSplitView più sotto).
+  // Per non mantenere due versioni del motore, quella copia viene generata al
+  // volo con boot.toString() e rieseguita nel documento della nuova finestra con
+  // misure diverse (più stretta e più alta). cfg porta solo i numeri che cambiano
+  // fra le due viste: il resto del codice è identico in entrambe. Per questo
+  // tutto ciò che serve (compreso NS) vive dentro boot: è il testo di boot stesso
+  // a essere rieseguito nella nuova finestra, quindi non può dipendere da nulla
+  // di esterno.
   function boot(cfg){
     var NS="http://www.w3.org/2000/svg";
     var E=function(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;};
@@ -68,10 +67,10 @@
     function easeOutBack(t){var c1=1.2,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);}
     var _lmode="search", _full=false, _focusNode=null;
     function depthRadius(d){
-      // I raggi erano numeri fissi pensati per il riquadro largo 760x560. Nella
-      // vista affiancata il riquadro è più stretto, quindi li scalo in base a
-      // quanto è piccola la dimensione che stringe di più (di solito la larghezza),
-      // usando come riferimento il caso originale (280 = metà dei 560 di altezza).
+      // I raggi sono definiti per il riquadro largo 760x560. Nella vista affiancata
+      // il riquadro è più stretto, quindi vengono scalati sulla dimensione più
+      // vincolante (di solito la larghezza), usando come riferimento il caso
+      // originale (280 = metà dei 560 di altezza).
       var k = Math.min(CX,CY)/280;
       if(d<=1)return 116*k;
       if(_lmode==="hover"){if(d===2)return 200*k;return 300*k;}
@@ -277,14 +276,11 @@
       finishLabels(vis);
     }
     function resolveTruncate(pri){
-      // Prima versione: provava solo la posizione base e, se collideva, accorciava
-      // il testo restando fermo lì. Il guaio è che due nodi vicini nello schema
-      // completo restano quasi sempre alla stessa altezza: rimpicciolire la scritta
-      // non li separa, e il risultato erano le etichette impastate una sull'altra
-      // che si vedevano nello screenshot. Ora, esattamente come fa resolveNudge per
+      // Due nodi vicini nello schema completo restano quasi sempre alla stessa
+      // altezza: accorciare il testo non basta a separarli. Come in resolveNudge per
       // la mappa normale, si tentano prima tutti gli spostamenti verticali con il
-      // nome per intero; si passa a tagliare con i puntini solo come ultima risorsa,
-      // continuando comunque a provare le stesse posizioni alternative.
+      // nome per intero; il taglio con i puntini è l'ultima risorsa, e anche in quel
+      // caso si provano le stesse posizioni alternative.
       resetLabels();
       var vis=nodes.filter(function(n){return !n.hidden;});
       vis.sort(prioritySort(pri));
@@ -330,12 +326,11 @@
       if(!n||n===home)return;
       n.halo.setAttribute("fill","url(#vglow)");
       focusLayer.appendChild(n.halo);focusLayer.appendChild(n.lbl);focusLayer.appendChild(n.ul);
-      // n.el (il pallino) di proposito NON viene più spostato qui. Portarlo avanti
-      // e indietro fra i gruppi mentre il mouse ci stava sopra gli faceva perdere
-      // per un frame lo stato :hover del CSS (o interrompeva la transizione dello
-      // scale), ed era quello lo sfarfallio sul nodo appena lasciato segnalato in
-      // fase di test. L'alone e l'etichetta sopra a tutto bastano per leggerla bene,
-      // il pallino può restare nel suo layer normale.
+      // n.el (il pallino) di proposito NON viene spostato qui. Portarlo avanti e
+      // indietro fra i gruppi mentre il mouse è sopra gli fa perdere per un frame
+      // lo stato :hover del CSS (o interrompe la transizione dello scale), con uno
+      // sfarfallio sul nodo appena lasciato. L'alone e l'etichetta in primo piano
+      // bastano per la leggibilità: il pallino resta nel suo layer normale.
       n._focus=true;
     }
     function clearFocus(n){
@@ -414,10 +409,9 @@
       nodes.forEach(function(n){n.bright=false;n.dim=false;n.redOutline=false;n.fill=(n===home?"filled":"outline");n._rOff=0;n.hidden=false;});
       home.tx=CX;home.ty=CY;home._ang=0;
       var inc=function(){return true;};
-      // il gap fra le sezioni era 6°: portato a 9° (uguale a quello della ricerca)
-      // per dare un po' più di respiro fra un ramo e l'altro prima ancora che
-      // entri in gioco resolveTruncate — meno affollamento a monte, meno lavoro
-      // da fare a valle per separare le etichette.
+      // Gap di 9° fra le sezioni (uguale a quello della ricerca): dà più respiro
+      // fra un ramo e l'altro prima ancora che entri in gioco resolveTruncate —
+      // meno affollamento a monte, meno lavoro a valle per separare le etichette.
       var ns=sections.length, gap=9*DEG, usable=2*Math.PI-gap*ns;
       var tot=0,lc=[];sections.forEach(function(s,i){lc[i]=leafCount(s,inc);tot+=lc[i];});if(!tot)tot=ns;
       var a=-Math.PI/2;
@@ -499,10 +493,11 @@
             '<div class="vstatus" id="vstatus"><span>doppio click su un nodo per aprirlo</span></div>'+
           '</div>'+
         '</div>';
-      // Il sito INPS vieta di essere incluso in un frame (X-Frame-Options), quindi
-      // l'iframe restava vuoto con "Connessione negata". Qui il riquadro di sinistra
-      // è una riproduzione statica e fedele della home inps.it, in puro HTML/CSS:
-      // si carica sempre, resta leggera e non dipende dai permessi del sito reale.
+      // Il sito INPS vieta di essere incluso in un frame (X-Frame-Options): un
+      // iframe resterebbe vuoto con "Connessione negata". Il riquadro di sinistra
+      // è quindi una riproduzione statica e fedele della home inps.it, in puro
+      // HTML/CSS: si carica sempre, resta leggera e non dipende dai permessi del
+      // sito reale.
       function inpsCard(tag,date,title,blurb){
         return '<div class="inps-card"><div class="inps-card-top"><span class="inps-card-ico"></span>'+
           '<span class="inps-card-tag">'+tag+(date?' <span class="inps-card-date">'+date+'</span>':'')+'</span></div>'+
@@ -590,8 +585,8 @@
         ".inps-card-more{font-size:13px;font-weight:700;color:#0059a9;}"+
         "@media(max-width:860px){.inps-cards{grid-template-columns:repeat(2,1fr);}.inps-hero-img{display:none;}}"+
         "@media(max-width:520px){.inps-cards{grid-template-columns:1fr;}.inps-hero-txt h1{font-size:26px;}}"+
-        // La mappa affiancata: margini laterali ridotti (era padding 28 + colonna fissa larga) e larghezza
-        // ora responsive, con minimo/massimo, così il riquadro resta usabile anche nel suo formato nativo.
+        // La mappa affiancata: margini laterali ridotti e larghezza responsive, con
+        // minimo e massimo, così il riquadro resta usabile anche nel suo formato nativo.
         ".apppane{flex:0 1 clamp(320px,42%,540px);min-width:300px;padding:12px;display:flex;align-items:flex-start;justify-content:center;background:#18100f;border-left:1px solid #2a2927;}"+
         // --- Finestra staccata (il quadrato la attiva): riquadro QUADRATO in alto a destra.
         // Il pannello diventa colonna flex (barra + mappa + ricerca) e la mappa (#vmap) prende
@@ -641,10 +636,10 @@
     if(vfullBtn){vfullBtn.addEventListener("click",function(){openSplitView();});}
 
     // Il quadrato nella finestra affiancata: fa "staccare" la mappa in un riquadro
-    // mobile appoggiato SOPRA il sito (come nel mockup) e, ripremuto, la riaggancia
-    // di fianco. Esiste solo nella finestra affiancata (nella vista principale al
-    // suo posto c'è vfull, che invece apre la finestra affiancata), quindi qui
-    // controlliamo prima che il pulsante e lo split ci siano davvero.
+    // mobile appoggiato SOPRA il sito e, ripremuto, la riaggancia di fianco.
+    // Esiste solo nella finestra affiancata (nella vista principale al suo posto
+    // c'è vfull, che invece apre la finestra affiancata), quindi qui si controlla
+    // prima che il pulsante e lo split ci siano davvero.
     var vfloatBtn=document.getElementById("vfloat");
     if(vfloatBtn){vfloatBtn.addEventListener("click",function(){
       var wrap=document.querySelector(".splitwrap");if(!wrap)return;
@@ -706,15 +701,13 @@
         var b=cam.box,pad=18,bw=Math.max(1,(b.maxX-b.minX)+2*pad),bh=Math.max(1,(b.maxY-b.minY)+2*pad);
         var s=Math.min(VW/bw,VH/bh,1);cam.ts=s;cam.tpx=CX-s*(b.minX+b.maxX)/2;cam.tpy=CY-s*(b.minY+b.maxY)/2;
       } else if(cam.mode==="hover"&&cam.box){
-        // Prima la messa a fuoco durante la navigazione veniva incastrata dentro
-        // un riquadro [0..VW]x[0..VH] ancorato all'ORIGINE del viewBox, non al suo
-        // centro reale (CX,CY): restava così uno sbilanciamento fisso di ~20px per
-        // lato. Sulla vista principale, larga e panoramica, non si notava; nella
-        // finestra affiancata, stretta e verticale, il ramo a fuoco finiva spostato
-        // o tagliato di lato — ed è esattamente la "centratura durante la
-        // navigazione" che non tornava. Ora il riquadro a fuoco viene centrato su
-        // (CX,CY) con la stessa formula della modalità schema completo/"search",
-        // che infatti era già corretta.
+        // La messa a fuoco durante la navigazione è centrata sul centro reale del
+        // viewBox (CX,CY), non su un riquadro [0..VW]x[0..VH] ancorato alla sua
+        // ORIGINE: quest'ultimo lascerebbe uno sbilanciamento fisso di ~20px per
+        // lato, impercettibile nella vista principale, larga e panoramica, ma
+        // sufficiente a spostare o tagliare di lato il ramo a fuoco nella finestra
+        // affiancata, stretta e verticale. La formula è la stessa della modalità
+        // schema completo/"search".
         var b=cam.box,pad=16,bw=Math.max(1,b.maxX-b.minX),bh=Math.max(1,b.maxY-b.minY);
         var sFit=Math.min((VW-2*pad)/bw,(VH-2*pad)/bh,1);var s=Math.max(sFit,0.78);cam.ts=s;
         cam.tpx=CX-s*(b.minX+b.maxX)/2;

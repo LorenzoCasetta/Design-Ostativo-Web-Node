@@ -1,4 +1,4 @@
-/* Stile del pannello — identico al tuo Web_Node.html */
+/* Stile del pannello */
 .vwrap{padding:0;}
 .vpanel{background:#1b1a19;overflow:hidden;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;line-height:1.2;transition:opacity .3s ease;}
 .vbar{display:flex;align-items:center;gap:10px;padding:11px 15px;}

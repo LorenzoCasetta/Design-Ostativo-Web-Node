@@ -1,7 +1,7 @@
 /* Web Node — costruzione dell'albero dal sitemap del sito.
-   Questa e' la parte che NEL TUO FILE NON C'ERA: scopre il sitemap, lo legge,
-   e da una lista piatta di URL ricava una gerarchia con etichette leggibili,
-   nella forma { label, url, children } che il motore (engine.js) sa disegnare.
+   Scopre il sitemap, lo legge e da una lista piatta di URL ricava una
+   gerarchia con etichette leggibili, nella forma { label, url, children }
+   che il motore (engine.js) sa disegnare.
 
    Nessuna dipendenza dal DOM: il parsing e' fatto sui tag <loc>/<sitemap> con
    espressioni regolari (i sitemap sono XML semplice), cosi' lo stesso file gira
@@ -63,7 +63,13 @@
         var raw = p.pathname.split("/").filter(Boolean);
         // Language prefixes are routing metadata rather than content sections.
         while(raw.length && /^(it|en|fr|de|es|pt|nl)(-[a-z]{2})?(\.html?)?$/i.test(raw[0]))raw.shift();
-        items.push({ url: u, keys: raw.map(segKey), segs: raw });
+        var keys=raw.map(segKey);
+        // Query strings can identify different destinations (watch?v=..., ?id=...).
+        if(p.search){
+          if(!keys.length){keys.push("@query"+p.search);raw.push("Pagina");}
+          else keys[keys.length-1]+=p.search;
+        }
+        items.push({ url: u, keys: keys, segs: raw });
       } catch (e) {}
     });
     if (!items.length) return { label: rootLabel, url: rootUrl || "#" };
