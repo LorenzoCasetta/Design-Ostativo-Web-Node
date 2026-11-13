@@ -14,7 +14,7 @@ Versione archiviata: quella attuale è [Web Node 4](../Versione%204/).
 
 ## Installazione
 
-1. Scaricare ed estrarre [Web_Node_3.0.0.zip](https://github.com/LorenzoCasetta/design_ostativo/raw/main/Versione%203/Web_Node_3.0.0.zip).
+1. Scaricare ed estrarre [Web_Node_3.0.0.zip](https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node/raw/main/Versione%203/Web_Node_3.0.0.zip).
 2. Aprire la gestione estensioni del browser e attivare la modalità sviluppatore.
 3. Scegliere «Carica estensione non pacchettizzata» e selezionare la cartella che contiene `manifest.json`.
 4. Aprire un sito e premere l’icona Web Node.
@@ -52,4 +52,4 @@ Casetta, L. (2026). *Design ostativo. I dark pattern e l’asimmetria normativa 
 
 Versione precedente: [Web Node 2](../Versione%202/) · Versione successiva: [Web Node 4](../Versione%204/)
 
-Codice e altre versioni: [github.com/LorenzoCasetta/design_ostativo](https://github.com/LorenzoCasetta/design_ostativo)
+Codice e altre versioni: [github.com/LorenzoCasetta/Design-Ostativo-Web-Node](https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node)

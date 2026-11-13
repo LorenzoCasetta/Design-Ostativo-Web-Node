@@ -9,8 +9,8 @@ authors:
     affiliation: "Università Iuav di Venezia"
 version: "4.1.5"
 date-released: "2026-11-10"
-repository-code: "https://github.com/LorenzoCasetta/design_ostativo"
-url: "https://lorenzocasetta.github.io/design_ostativo/"
+repository-code: "https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node"
+url: "https://lorenzocasetta.github.io/Design-Ostativo-Web-Node/"
 keywords:
   - dark pattern
   - design ostativo

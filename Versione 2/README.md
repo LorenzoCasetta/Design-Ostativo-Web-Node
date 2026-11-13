@@ -2,7 +2,7 @@
 
 Prima versione funzionante online: la mappa a nodi di inps.it, pubblicata con GitHub Pages.
 
-[Apri il prototipo](https://lorenzocasetta.github.io/design_ostativo/)
+[Apri il prototipo](https://lorenzocasetta.github.io/Design-Ostativo-Web-Node/)
 
 ## Cosa cambia rispetto alla versione 1
 

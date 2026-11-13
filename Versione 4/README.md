@@ -16,7 +16,7 @@ Web Node disegna come mappa a nodi i collegamenti rilevati nella pagina corrente
 
 ## Installazione
 
-1. Scaricare ed estrarre [Web_Node_4.1.5.zip](https://github.com/LorenzoCasetta/design_ostativo/raw/main/Versione%204/Web_Node_4.1.5.zip).
+1. Scaricare ed estrarre [Web_Node_4.1.5.zip](https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node/raw/main/Versione%204/Web_Node_4.1.5.zip).
 2. Aprire la gestione estensioni del browser e attivare la modalità sviluppatore.
 3. Scegliere «Carica estensione non pacchettizzata» e selezionare la cartella che contiene `manifest.json`.
 4. Aprire una pagina web e premere l’icona Web Node.
@@ -34,7 +34,7 @@ Se è già installata una copia precedente, rimuoverla prima di caricare questa.
 
 ## Privacy
 
-L’estensione usa i permessi `activeTab`, `scripting` e `storage`. I collegamenti sono elaborati nel browser, che conserva solo lo stato necessario alla navigazione. Nessun dato viene inviato a server esterni. Dettagli nell’[informativa sulla privacy](https://lorenzocasetta.github.io/design_ostativo/privacy.html).
+L’estensione usa i permessi `activeTab`, `scripting` e `storage`. I collegamenti della pagina sono elaborati nel browser e non vengono salvati; resta in memoria solo lo stato della finestra (posizione, dimensione e modalità) fino alla chiusura della scheda. Nessun dato viene inviato allo sviluppatore o a servizi di analisi. Dettagli nell’[informativa sulla privacy](https://lorenzocasetta.github.io/Design-Ostativo-Web-Node/privacy.html).
 
 ## Compatibilità e limiti noti
 
@@ -54,4 +54,4 @@ Casetta, L. (2026). *Design ostativo. I dark pattern e l’asimmetria normativa 
 
 Versione precedente: [Web Node 3](../Versione%203/)
 
-Codice e altre versioni: [github.com/LorenzoCasetta/design_ostativo](https://github.com/LorenzoCasetta/design_ostativo)
+Codice e altre versioni: [github.com/LorenzoCasetta/Design-Ostativo-Web-Node](https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node)
