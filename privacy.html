@@ -1,108 +1,455 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Web Node — Informativa sulla privacy</title>
-<meta name="description" content="Informativa sulla privacy dell'estensione Web Node: nessun dato raccolto, nessun invio a server.">
-<style>
-:root{--bg:#1b1a19;--fg:#e8e6e1;--muted:#9a9891;--line:#2f2d2b;--red:#b62118}
-*{box-sizing:border-box}
-html{background:var(--bg)}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 "Helvetica Neue",Helvetica,Arial,sans-serif}
-main{max-width:720px;margin:0 auto;padding:56px 16px 72px}
-header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:8px}
-header a{color:var(--fg);text-decoration:none;font-weight:500}
-header a span{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);margin-right:10px;vertical-align:1px}
-nav a{color:var(--muted);font-size:14px;text-decoration:none;margin-left:14px}
-nav a:hover,nav a:focus{color:var(--fg)}
-h1{font-size:30px;line-height:1.2;font-weight:500;margin:40px 0 6px;letter-spacing:-.01em}
-.date{color:var(--muted);font-size:14px;margin:0 0 28px}
-.lead{font-size:19px;line-height:1.5;margin:0 0 32px}
-h2{font-size:16px;font-weight:600;margin:32px 0 6px}
-p,li,footer{overflow-wrap:anywhere}
-p,li{color:#cfcdc8}
-ul{padding-left:20px}
-code{font:14px/1.4 ui-monospace,Menlo,monospace;color:var(--fg);background:#262422;padding:1px 5px;border-radius:3px}
-a{color:var(--fg)}
-.lang{border-top:1px solid var(--line);margin-top:56px;padding-top:8px}
-footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:56px;padding-top:20px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Web Node — Informativa sulla privacy</title>
+  <meta name="description" content="Come Web Node elabora localmente i collegamenti delle pagine e conserva temporaneamente le impostazioni del pannello.">
+  <style>
+    :root {
+      --bg: #1b1a19;
+      --fg: #e8e6e1;
+      --muted: #9a9891;
+      --line: #2f2d2b;
+      --red: #b62118;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      background: var(--bg);
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 16px/1.6 "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 56px 20px 72px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 20px;
+    }
+
+    header a {
+      color: var(--fg);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .brand::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-right: 10px;
+      border-radius: 50%;
+      background: var(--red);
+    }
+
+    nav {
+      display: flex;
+      gap: 16px;
+    }
+
+    nav a {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    nav a:hover,
+    nav a:focus {
+      color: var(--fg);
+    }
+
+    h1 {
+      margin: 40px 0 6px;
+      font-size: 30px;
+      line-height: 1.2;
+      font-weight: 500;
+    }
+
+    h2 {
+      margin: 30px 0 8px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    p, li {
+      color: #cfcdc8;
+      overflow-wrap: anywhere;
+    }
+
+    .date {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    .lead {
+      font-size: 19px;
+      line-height: 1.5;
+    }
+
+    ul { padding-left: 22px; }
+
+    li + li { margin-top: 8px; }
+
+    a { color: var(--fg); }
+
+    code {
+      font: 14px/1.4 ui-monospace, Menlo, monospace;
+      background: #262422;
+      padding: 2px 5px;
+      border-radius: 3px;
+      overflow-wrap: anywhere;
+    }
+
+    .lang {
+      border-top: 1px solid var(--line);
+      margin-top: 56px;
+      padding-top: 8px;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      margin-top: 56px;
+      padding-top: 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
 <main>
-<header>
- <a href="https://github.com/LorenzoCasetta/design_ostativo"><span aria-hidden="true"></span>Web Node</a>
- <nav aria-label="Lingua"><a href="#it" lang="it">Italiano</a><a href="#en" lang="en">English</a></nav>
-</header>
+  <header>
+    <a class="brand" href="https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node">Web Node</a>
+    <nav aria-label="Lingua">
+      <a href="#it" lang="it">Italiano</a>
+      <a href="#en" lang="en">English</a>
+    </nav>
+  </header>
 
-<section id="it" lang="it">
-<h1>Informativa sulla privacy</h1>
-<p class="date">Ultimo aggiornamento: 12 novembre 2026</p>
-<p class="lead">Web Node non raccoglie, non conserva e non invia dati personali. Tutto avviene nel tuo browser.</p>
+  <section id="it" lang="it" aria-labelledby="title-it">
+    <h1 id="title-it">Informativa sulla privacy</h1>
+    <p class="date">Ultimo aggiornamento: 13 novembre 2026</p>
 
-<h2>Che cosa legge</h2>
-<p>Quando premi l’icona di Web Node, l’estensione legge l’indirizzo della pagina aperta e i collegamenti che contiene (indirizzo e testo di ogni link), per disegnarne la mappa. La lettura avviene solo nella scheda in cui hai premuto l’icona e solo dopo il tuo clic.</p>
+    <p class="lead">
+      Web Node elabora i collegamenti delle pagine localmente nel browser
+      per mostrarli come una mappa interattiva. Non trasmette allo
+      sviluppatore i contenuti delle pagine o i dati di navigazione.
+    </p>
 
-<h2>Che cosa conserva</h2>
-<p>Per non perdere la finestra mentre navighi nel sito, Web Node ricorda per ogni scheda la posizione, la dimensione e la modalità della finestra (ridotta o divisa). Questi dati sono salvati in <code>chrome.storage.session</code>, restano nel browser e vengono cancellati quando chiudi la scheda o il browser. Il contenuto delle pagine e la cronologia di navigazione non vengono salvati.</p>
+    <h2>Ambito e sviluppatore</h2>
+    <p>
+      Questa informativa descrive il funzionamento dell’estensione
+      Web Node, sviluppata da Lorenzo Casetta. Distingue i dati
+      elaborati dall’estensione dai servizi esterni utilizzati per
+      distribuire il software, ospitare questa pagina e ricevere
+      segnalazioni.
+    </p>
 
-<h2>Che cosa non fa</h2>
-<ul>
- <li>Non invia dati allo sviluppatore né a terze parti: l’estensione non effettua richieste di rete.</li>
- <li>Non usa cookie, strumenti di analisi, pubblicità o profilazione.</li>
- <li>Non richiede account e non esegue codice remoto.</li>
- <li>Non vende né cede dati, perché non ne raccoglie.</li>
-</ul>
+    <h2>Quali informazioni elabora</h2>
+    <p>
+      Dopo che l’utente preme l’icona di Web Node, l’estensione legge
+      l’URL e il titolo della pagina aperta, i collegamenti interni
+      alla stessa origine e le relative etichette testuali.
+      Queste informazioni possono contenere dati personali, a seconda
+      della pagina visitata.
+    </p>
+    <p>
+      L’elaborazione serve esclusivamente a costruire, visualizzare,
+      aggiornare e rendere navigabile la mappa. Mentre il pannello
+      è aperto, i collegamenti vengono riletti periodicamente.
+      I dati necessari alla mappa rimangono nella memoria di
+      esecuzione della pagina e non vengono inviati allo sviluppatore
+      o a servizi di analisi.
+    </p>
+    <p>
+      L’estensione gestisce inoltre i comandi impartiti attraverso
+      l’interfaccia, come ricerca, clic, zoom e trascinamento.
+      Non crea registri di queste interazioni e non le utilizza
+      per analisi o profilazione.
+    </p>
 
-<h2>Permessi</h2>
-<ul>
- <li><code>activeTab</code>: accesso alla sola scheda attiva, dopo il clic sull’icona.</li>
- <li><code>scripting</code>: inserisce nella pagina la finestra con la mappa.</li>
- <li><code>storage</code>: conserva lo stato della finestra descritto sopra.</li>
-</ul>
+    <h2>Quali informazioni conserva</h2>
+    <p>
+      Web Node utilizza <code>chrome.storage.session</code> per
+      conservare temporaneamente posizione, dimensione, modalità
+      e lato del pannello, associati all’identificativo della scheda.
+      Queste impostazioni permettono di ripristinare l’interfaccia
+      durante la navigazione.
+    </p>
+    <p>
+      In questa memoria non vengono salvati contenuti delle pagine,
+      titoli, elenchi di collegamenti o una cronologia delle pagine
+      visitate. Non viene utilizzato <code>chrome.storage.sync</code>.
+    </p>
 
-<h2>Uso limitato</h2>
-<p>L’uso delle informazioni ricevute dalle API di Chrome rispetta le <a href="https://developer.chrome.com/docs/webstore/program-policies/policies">norme del programma Chrome Web Store</a>, compresi i requisiti di uso limitato (Limited Use).</p>
+    <h2>Durata e cancellazione</h2>
+    <p>
+      Le impostazioni del pannello vengono eliminate alla chiusura
+      del pannello o della scheda. La memoria di sessione viene
+      inoltre cancellata al termine della sessione del browser.
+      I dati temporanei della mappa non vengono archiviati
+      dall’estensione.
+    </p>
+    <p>
+      Chiudendo il pannello si interrompe l’aggiornamento della mappa.
+      È possibile disattivare o disinstallare Web Node dalle
+      impostazioni delle estensioni del browser. Queste operazioni
+      non cancellano la cronologia o gli altri dati che il browser
+      e i siti gestiscono autonomamente.
+    </p>
 
-<h2>Modifiche e contatti</h2>
-<p>Eventuali modifiche a questa informativa saranno pubblicate su questa pagina, con la data di aggiornamento. Per domande o segnalazioni: <a href="https://github.com/LorenzoCasetta/design_ostativo/issues">github.com/LorenzoCasetta/design_ostativo/issues</a>.</p>
-</section>
+    <h2>Permessi richiesti</h2>
+    <ul>
+      <li>
+        <code>activeTab</code>: permette l’accesso temporaneo alla
+        scheda attiva dopo l’attivazione da parte dell’utente.
+        L’autorizzazione può restare valida durante la navigazione
+        nella stessa origine, nei limiti previsti dal browser.
+      </li>
+      <li>
+        <code>scripting</code>: consente di eseguire gli script
+        inclusi nell’estensione per leggere i collegamenti,
+        mostrare la mappa e ripristinare il pannello.
+      </li>
+      <li>
+        <code>storage</code>: consente di conservare lo stato
+        temporaneo del pannello descritto in questa informativa.
+      </li>
+    </ul>
+    <p>
+      Web Node non richiede un’autorizzazione permanente per
+      leggere tutti i siti e non utilizza l’API della cronologia
+      del browser.
+    </p>
 
-<section id="en" lang="en" class="lang">
-<h1>Privacy policy</h1>
-<p class="date">Last updated: 12 November 2026</p>
-<p class="lead">Web Node does not collect, store or transmit personal data. Everything happens in your browser.</p>
+    <h2>Trasmissioni e servizi esterni</h2>
+    <p>
+      Web Node non invia i dati elaborati per la mappa a server
+      dello sviluppatore o a servizi di analisi. Non include
+      pubblicità, strumenti di tracciamento, profilazione,
+      cookie propri o codice eseguibile caricato da remoto.
+      Non richiede un account.
+    </p>
+    <p>
+      Quando l’utente apre un collegamento dalla mappa, il browser
+      si connette normalmente al sito di destinazione. Il sito
+      riceve i dati normalmente associati alla navigazione
+      e applica le proprie condizioni e informative.
+    </p>
+    <p>
+      Questa pagina e il repository sono ospitati su GitHub.
+      La distribuzione e gli aggiornamenti dell’estensione
+      avvengono tramite Chrome Web Store. GitHub e Google
+      trattano i dati relativi all’utilizzo dei loro servizi
+      secondo le rispettive informative:
+      <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">informativa GitHub</a>
+      e
+      <a href="https://policies.google.com/privacy">informativa Google</a>.
+      Tali trattamenti sono distinti dall’elaborazione locale
+      effettuata da Web Node.
+    </p>
 
-<h2>What it reads</h2>
-<p>When you click the Web Node icon, the extension reads the address of the open page and the links it contains (address and text of each link) to draw its map. It reads only the tab where you clicked the icon, and only after your click.</p>
+    <h2>Uso limitato delle informazioni</h2>
+    <p>
+      L’uso delle informazioni ottenute tramite le API di Chrome
+      rispetta le
+      <a href="https://developer.chrome.com/docs/webstore/program-policies/policies">norme del programma Chrome Web Store</a>,
+      inclusi i requisiti di uso limitato (Limited Use).
+      Le informazioni sono utilizzate esclusivamente per
+      fornire la mappa navigabile. Non vengono vendute,
+      utilizzate per pubblicità o impiegate per valutazioni
+      creditizie o concessione di prestiti.
+    </p>
 
-<h2>What it stores</h2>
-<p>To keep the window in place while you browse the site, Web Node remembers, for each tab, the position, size and mode (floating or split) of its window. This is saved in <code>chrome.storage.session</code>, stays in the browser and is deleted when you close the tab or the browser. Page content and browsing history are not saved.</p>
+    <h2>Contatti e segnalazioni</h2>
+    <p>
+      Per domande sul funzionamento o sulla privacy è possibile
+      contattare lo sviluppatore attraverso le
+      <a href="https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node/issues">segnalazioni del repository</a>.
+      Le segnalazioni sono pubbliche: non inserire password,
+      dati sensibili o indirizzi di pagine contenenti informazioni
+      riservate. Le informazioni inviate volontariamente saranno
+      visibili allo sviluppatore e agli altri visitatori.
+    </p>
 
-<h2>What it does not do</h2>
-<ul>
- <li>It sends no data to the developer or to third parties: the extension makes no network requests.</li>
- <li>It uses no cookies, analytics, advertising or profiling.</li>
- <li>It requires no account and runs no remote code.</li>
- <li>It does not sell or share data, because it collects none.</li>
-</ul>
+    <h2>Modifiche all’informativa</h2>
+    <p>
+      Eventuali aggiornamenti saranno pubblicati su questa pagina
+      indicando la data di modifica. Le dichiarazioni sulla scheda
+      dello store saranno aggiornate quando cambia il trattamento
+      dei dati da parte dell’estensione.
+    </p>
+  </section>
 
-<h2>Permissions</h2>
-<ul>
- <li><code>activeTab</code>: access to the active tab only, after you click the icon.</li>
- <li><code>scripting</code>: inserts the map window into the page.</li>
- <li><code>storage</code>: keeps the window state described above.</li>
-</ul>
+  <section id="en" lang="en" class="lang" aria-labelledby="title-en">
+    <h1 id="title-en">Privacy policy</h1>
+    <p class="date">Last updated: 13 November 2026</p>
 
-<h2>Limited Use</h2>
-<p>The use of information received from Chrome APIs adheres to the <a href="https://developer.chrome.com/docs/webstore/program-policies/policies">Chrome Web Store Program Policies</a>, including the Limited Use requirements.</p>
+    <p class="lead">
+      Web Node processes page links locally in your browser to
+      display an interactive map. It does not transmit page
+      contents or browsing data to the developer.
+    </p>
 
-<h2>Changes and contact</h2>
-<p>Any change to this policy will be published on this page with its update date. Questions and reports: <a href="https://github.com/LorenzoCasetta/design_ostativo/issues">github.com/LorenzoCasetta/design_ostativo/issues</a>.</p>
-</section>
+    <h2>Scope and developer</h2>
+    <p>
+      This policy describes the Web Node extension, developed
+      by Lorenzo Casetta. It distinguishes information processed
+      by the extension from external services used to distribute
+      the software, host this page and receive support requests.
+    </p>
 
-<footer>Web Node · Lorenzo Casetta · <a href="https://doi.org/10.5281/zenodo.21515611">Design ostativo</a>, Università Iuav di Venezia, 2026</footer>
+    <h2>Information processed</h2>
+    <p>
+      After you click the Web Node icon, the extension reads
+      the current page URL and title, links within the same
+      origin and their text labels. Depending on the page,
+      this information may contain personal data.
+    </p>
+    <p>
+      This information is used solely to build, display, update
+      and navigate the map. Links are read periodically while
+      the panel is open. Information needed for the map remains
+      in the page’s runtime memory and is not sent to the
+      developer or analytics services.
+    </p>
+    <p>
+      The extension also handles interface commands such as
+      searches, clicks, zooming and dragging. It does not create
+      logs of these interactions or use them for analytics
+      or profiling.
+    </p>
+
+    <h2>Information stored</h2>
+    <p>
+      Web Node uses <code>chrome.storage.session</code> to
+      temporarily store the panel’s position, size, display
+      mode and side, associated with the tab identifier.
+      These settings allow the interface to be restored
+      during navigation.
+    </p>
+    <p>
+      Page contents, titles, link lists and browsing history
+      are not saved in this storage.
+      <code>chrome.storage.sync</code> is not used.
+    </p>
+
+    <h2>Retention and deletion</h2>
+    <p>
+      Panel settings are removed when the panel or tab is
+      closed. Session storage is also cleared when the browser
+      session ends. Temporary map data is not archived by
+      the extension.
+    </p>
+    <p>
+      Closing the panel stops map updates. You can disable
+      or uninstall Web Node through your browser’s extension
+      settings. These actions do not erase browsing history
+      or other information independently managed by your
+      browser or the websites you visit.
+    </p>
+
+    <h2>Permissions</h2>
+    <ul>
+      <li>
+        <code>activeTab</code>: grants temporary access to the
+        active tab after user activation. Access may remain
+        valid during navigation within the same origin,
+        subject to browser restrictions.
+      </li>
+      <li>
+        <code>scripting</code>: runs scripts included in the
+        extension to read links, display the map and restore
+        the panel.
+      </li>
+      <li>
+        <code>storage</code>: stores the temporary panel
+        settings described in this policy.
+      </li>
+    </ul>
+    <p>
+      Web Node does not request permanent access to all
+      websites and does not use the browser history API.
+    </p>
+
+    <h2>Transfers and external services</h2>
+    <p>
+      Web Node does not send information processed for the map
+      to developer-operated servers or analytics services.
+      It includes no advertising, tracking tools, profiling,
+      cookies of its own or remotely loaded executable code.
+      No account is required.
+    </p>
+    <p>
+      When you follow a link from the map, your browser
+      connects normally to the destination website. That
+      website receives information normally associated with
+      browsing and applies its own terms and privacy policy.
+    </p>
+    <p>
+      This page and the repository are hosted on GitHub.
+      The extension is distributed and updated through the
+      Chrome Web Store. GitHub and Google process information
+      associated with their services under their respective
+      policies:
+      <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub Privacy Statement</a>
+      and
+      <a href="https://policies.google.com/privacy">Google Privacy Policy</a>.
+      This processing is separate from Web Node’s local
+      processing.
+    </p>
+
+    <h2>Limited Use</h2>
+    <p>
+      The use of information obtained through Chrome APIs
+      complies with the
+      <a href="https://developer.chrome.com/docs/webstore/program-policies/policies">Chrome Web Store Program Policies</a>,
+      including the Limited Use requirements.
+      Information is used solely to provide the navigable
+      map. It is not sold or used for advertising,
+      creditworthiness assessments or lending purposes.
+    </p>
+
+    <h2>Contact and support</h2>
+    <p>
+      For questions about functionality or privacy, contact
+      the developer through the
+      <a href="https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node/issues">repository’s issue tracker</a>.
+      Reports are public: do not include passwords, sensitive
+      information or page addresses containing confidential
+      data. Information submitted voluntarily will be visible
+      to the developer and other visitors.
+    </p>
+
+    <h2>Policy updates</h2>
+    <p>
+      Updates will be published on this page with a revised
+      date. Store disclosures will be updated when the
+      extension’s data practices change.
+    </p>
+  </section>
+
+  <footer>
+    Web Node · Lorenzo Casetta ·
+    <a href="https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node">Repository</a>
+  </footer>
 </main>
 </body>
 </html>
