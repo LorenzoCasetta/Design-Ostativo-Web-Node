@@ -16,12 +16,16 @@ Web Node disegna come mappa a nodi i collegamenti rilevati nella pagina corrente
 
 ## Installazione
 
+Dal [Chrome Web Store](https://chromewebstore.google.com/detail/ahpmeicancomhnllfegpkbgchpmhnaeg): premere «Aggiungi a Chrome». Gli aggiornamenti arrivano in automatico.
+
+In alternativa, installazione manuale:
+
 1. Scaricare ed estrarre [Web_Node_4.1.5.zip](https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node/raw/main/Versione%204/Web_Node_4.1.5.zip).
 2. Aprire la gestione estensioni del browser e attivare la modalità sviluppatore.
 3. Scegliere «Carica estensione non pacchettizzata» e selezionare la cartella che contiene `manifest.json`.
 4. Aprire una pagina web e premere l’icona Web Node.
 
-Se è già installata una copia precedente, rimuoverla prima di caricare questa. L’estensione non è distribuita tramite Chrome Web Store.
+Se è già installata una copia caricata a mano, rimuoverla prima di installare quella del Chrome Web Store, per non averne due.
 
 ## Comandi
 

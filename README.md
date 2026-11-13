@@ -6,11 +6,11 @@ Web Node disegna la struttura di un sito come una mappa a nodi navigabile: ogni 
 
 [![Web Node applicato a inps.it: schema completo del sito](docs/anteprima.png)](https://lorenzocasetta.github.io/Design-Ostativo-Web-Node/)
 
-[Apri il prototipo online](https://lorenzocasetta.github.io/Design-Ostativo-Web-Node/) · [Scarica l'estensione 4.1.5](https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node/raw/main/Versione%204/Web_Node_4.1.5.zip) · [Leggi la tesi](https://doi.org/10.5281/zenodo.21515611)
+[Installa dal Chrome Web Store](https://chromewebstore.google.com/detail/ahpmeicancomhnllfegpkbgchpmhnaeg) · [Apri il prototipo online](https://lorenzocasetta.github.io/Design-Ostativo-Web-Node/) · [Leggi la tesi](https://doi.org/10.5281/zenodo.21515611)
 
 ## Versione corrente
 
-[Web Node 4](Versione%204/) è un’estensione per browser Chromium. Si apre dall’icona del browser sul sito che si sta visitando e ne disegna i collegamenti in una finestra sopra la pagina.
+[Web Node 4](Versione%204/) è un’estensione per browser Chromium, disponibile sul [Chrome Web Store](https://chromewebstore.google.com/detail/ahpmeicancomhnllfegpkbgchpmhnaeg) per Chrome e per i browser basati su Chromium, come Arc e Brave. Si apre dall’icona del browser sul sito che si sta visitando e ne disegna i collegamenti in una finestra sopra la pagina.
 
 - La finestra si sposta, si ridimensiona e può dividere la pagina a metà con il sito.
 - La mappa si ingrandisce e segue il puntatore.
@@ -22,7 +22,7 @@ Web Node disegna la struttura di un sito come una mappa a nodi navigabile: ogni 
 
 | Versione | Che cos’è | Novità principali |
 | --- | --- | --- |
-| [Versione 4](Versione%204/) | Estensione Chromium 4.1.5, attuale · [scarica](https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node/raw/main/Versione%204/Web_Node_4.1.5.zip) | Finestra dentro la pagina, spostabile e ridimensionabile; divisione rifatta; titoli più corti |
+| [Versione 4](Versione%204/) | Estensione Chromium 4.1.5, attuale · [Chrome Web Store](https://chromewebstore.google.com/detail/ahpmeicancomhnllfegpkbgchpmhnaeg) · [zip](https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node/raw/main/Versione%204/Web_Node_4.1.5.zip) | Finestra dentro la pagina, spostabile e ridimensionabile; divisione rifatta; titoli più corti |
 | [Versione 3](Versione%203/) | Prima estensione Chromium, 3.0.0 · [scarica](https://github.com/LorenzoCasetta/Design-Ostativo-Web-Node/raw/main/Versione%203/Web_Node_3.0.0.zip) | La mappa nasce dai collegamenti della pagina aperta; zoom |
 | [Versione 2](Versione%202/) | Prototipo web, prima versione funzionante online · [apri](https://lorenzocasetta.github.io/Design-Ostativo-Web-Node/) | Livelli concentrici, etichette vicine ai nodi, motore separato dai dati |
 | [Versione 1](Versione%201/) | Prototipo originale, funzionante solo offline | Mappa di inps.it con ricerca, schema completo e vista affiancata |
